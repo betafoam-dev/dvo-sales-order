@@ -12,21 +12,16 @@ if (!$id) {
 
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
-    switch ($_GET['ajax']) {
-        case 'provinces':
-            $s = $conn->prepare("SELECT province_id, province_name FROM table_province WHERE region_id = ? ORDER BY province_name");
-            $s->execute([(int)($_GET['region_id'] ?? 0)]);
-            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
-        case 'municipalities':
-            $s = $conn->prepare("SELECT municipality_id, municipality_name FROM table_municipality WHERE province_id = ? ORDER BY municipality_name");
-            $s->execute([(int)($_GET['province_id'] ?? 0)]);
-            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
-        case 'barangays':
-            $s = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
-            $s->execute([(int)($_GET['municipality_id'] ?? 0)]);
-            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
+    if ($_GET['ajax'] === 'barangays') {
+        $id = (int)($_GET['municipality_id'] ?? 0);
+        if (!$id) { echo json_encode([]); exit; }
+        $s = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
+        $s->execute([$id]);
+        echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+    } else {
+        echo json_encode([]);
     }
-    echo json_encode([]); exit;
+    exit;
 }
 
 $so = $conn->prepare("SELECT * FROM sales_order_forms WHERE id = ? AND deleted_at IS NULL");
@@ -47,6 +42,15 @@ $uoms = $conn->query("SELECT uom.id, uom.uom_name, uom.uom_code
     ORDER BY uom.uom_name")->fetchAll();
 
 $regions = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
+$allProvinces = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name")->fetchAll(PDO::FETCH_ASSOC);
+$allMunicipalities = $conn->query("
+    SELECT m.municipality_id, m.municipality_name, m.province_id,
+           p.province_name, p.region_id, r.region_description
+    FROM table_municipality m
+    JOIN table_province p ON p.province_id = m.province_id
+    JOIN table_region r ON r.region_id = p.region_id
+    ORDER BY m.municipality_name
+")->fetchAll(PDO::FETCH_ASSOC);
 
 $errors = [];
 
@@ -75,8 +79,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     // Condition: region required if any location field is filled
     $locationFields = ['barangay', 'municipality', 'province', 'lot_no'];
-    $hasAnyLocation = array_filter(array_map(fn($f) => trim($data[$f] ?? ''), $locationFields));
-    if (!empty($hasAnyLocation) && empty(trim($data['region'] ?? ''))) {
+    $hasAnyLocation = array_filter(array_map(fn($f) => trim($data[$f]), $locationFields));
+    if (!empty($hasAnyLocation) && empty(trim($data['region']))) {
         $errors[] = 'Region is required when any location field is provided.';
     }
 
@@ -202,7 +206,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
-        select:disabled { background-color: #f3f4f6; cursor: not-allowed; }
+        input[type=number]::-webkit-inner-spin-button { opacity: 1; }
+        select, input, textarea { outline: none; }
+
+        /* ── Searchable Dropdown ── */
+        .sd-wrapper { position: relative; }
+        .sd-input {
+            width: 100%; box-sizing: border-box;
+            border: 1px solid #d1d5db; border-radius: 4px;
+            padding: 6px 28px 6px 10px; font-size: 0.875rem;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sd-input:focus { border-color: #60a5fa; box-shadow: 0 0 0 1px #bfdbfe; outline: none; }
+        .sd-dropdown {
+            display: none; position: absolute; z-index: 9999;
+            left: 0; right: 0; top: calc(100% + 2px);
+            background: #fff; border: 1px solid #d1d5db; border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,.12);
+        }
+        .sd-search {
+            width: 100%; box-sizing: border-box;
+            border: none; border-bottom: 1px solid #e5e7eb;
+            padding: 7px 10px; font-size: 0.8rem; outline: none;
+        }
+        .sd-list { max-height: 200px; overflow-y: auto; }
+        .sd-item { padding: 6px 10px; font-size: 0.85rem; cursor: pointer; }
+        .sd-item:hover { background: #eff6ff; }
+        .sd-item .sd-hint { font-size: 0.75rem; color: #9ca3af; }
+        .sd-empty { padding: 8px 10px; font-size: 0.8rem; color: #9ca3af; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -291,48 +323,98 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <!-- Region -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
-                            <select name="region" id="region-select"
-                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white">
-                                <option value="">-- Select Region --</option>
-                                <?php foreach ($regions as $r): ?>
-                                    <option value="<?= htmlspecialchars($r['region_description']) ?>"
-                                        data-id="<?= $r['region_id'] ?>"
-                                        <?= ($data['region'] ?? '') === $r['region_description'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($r['region_description']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
+                            <div class="sd-wrapper" id="region-wrapper">
+                                <input type="text" class="sd-input" id="region-display"
+                                    placeholder="-- Select Region --" readonly
+                                    value="<?= htmlspecialchars($data['region']) ?>">
+                                <input type="hidden" name="region" id="region-value"
+                                    value="<?= htmlspecialchars($data['region']) ?>">
+                                <div class="sd-dropdown" id="region-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search region...">
+                                    <div class="sd-list">
+                                        <?php foreach ($regions as $r): ?>
+                                            <div class="sd-item"
+                                                data-value="<?= htmlspecialchars($r['region_description']) ?>"
+                                                data-id="<?= $r['region_id'] ?>">
+                                                <?= htmlspecialchars($r['region_description']) ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Province -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Province</label>
-                            <select name="province" id="province-select"
-                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
-                                disabled>
-                                <option value="">-- Select Province --</option>
-                            </select>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Province</label>
+                            <div class="sd-wrapper" id="province-wrapper">
+                                <input type="text" class="sd-input" id="province-display"
+                                    placeholder="-- Select Province --" readonly
+                                    value="<?= htmlspecialchars($data['province']) ?>">
+                                <input type="hidden" name="province" id="province-value"
+                                    value="<?= htmlspecialchars($data['province']) ?>">
+                                <div class="sd-dropdown" id="province-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search province...">
+                                    <div class="sd-list">
+                                        <?php foreach ($allProvinces as $p): ?>
+                                            <div class="sd-item"
+                                                data-value="<?= htmlspecialchars($p['province_name']) ?>"
+                                                data-id="<?= $p['province_id'] ?>"
+                                                data-region-id="<?= $p['region_id'] ?>">
+                                                <?= htmlspecialchars($p['province_name']) ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Municipality -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Municipality</label>
-                            <select name="municipality" id="municipality-select"
-                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
-                                disabled>
-                                <option value="">-- Select Municipality --</option>
-                            </select>
+                            <div class="sd-wrapper" id="municipality-wrapper">
+                                <input type="text" class="sd-input" id="municipality-display"
+                                    placeholder="-- Select Municipality --" readonly
+                                    value="<?= htmlspecialchars($data['municipality']) ?>">
+                                <input type="hidden" name="municipality" id="municipality-value"
+                                    value="<?= htmlspecialchars($data['municipality']) ?>">
+                                <div class="sd-dropdown" id="municipality-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search municipality...">
+                                    <div class="sd-list">
+                                        <?php foreach ($allMunicipalities as $m): ?>
+                                            <div class="sd-item"
+                                                data-value="<?= htmlspecialchars($m['municipality_name']) ?>"
+                                                data-id="<?= $m['municipality_id'] ?>"
+                                                data-province="<?= htmlspecialchars($m['province_name']) ?>"
+                                                data-province-id="<?= $m['province_id'] ?>"
+                                                data-region="<?= htmlspecialchars($m['region_description']) ?>"
+                                                data-region-id="<?= $m['region_id'] ?>">
+                                                <?= htmlspecialchars($m['municipality_name']) ?>
+                                                <span class="sd-hint">(<?= htmlspecialchars($m['province_name']) ?>)</span>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Barangay -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Barangay</label>
-                            <select name="barangay" id="barangay-select"
-                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
-                                disabled>
-                                <option value="">-- Select Barangay --</option>
-                            </select>
+                            <div class="sd-wrapper" id="barangay-wrapper">
+                                <input type="text" class="sd-input" id="barangay-display"
+                                    placeholder="Type to search barangay..." readonly
+                                    value="<?= htmlspecialchars($data['barangay']) ?>">
+                                <input type="hidden" name="barangay" id="barangay-value"
+                                    value="<?= htmlspecialchars($data['barangay']) ?>">
+                                <div class="sd-dropdown" id="barangay-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search barangay...">
+                                    <div class="sd-list" id="barangay-list">
+                                        <div class="sd-empty">Select a municipality first</div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Contact Person -->
@@ -523,111 +605,194 @@ const inventories = <?= json_encode(array_combine(array_column($inventories, 'id
 const uoms = <?= json_encode($uoms) ?>;
 let rowIndex = <?= count($savedItems) ?>;
 
-// Preloaded saved location values
-const preselectedRegion       = <?= json_encode($data['region'] ?? '') ?>;
-const preselectedProvince     = <?= json_encode($data['province'] ?? '') ?>;
-const preselectedMunicipality = <?= json_encode($data['municipality'] ?? '') ?>;
-const preselectedBarangay     = <?= json_encode($data['barangay'] ?? '') ?>;
+// Saved values for restoration after POST validation failure
+        const saved = {
+            region: <?= json_encode($data['region']) ?>,
+            province: <?= json_encode($data['province']) ?>,
+            municipality: <?= json_encode($data['municipality']) ?>,
+            barangay: <?= json_encode($data['barangay']) ?>,
+        };
 
-const regionSelect       = document.getElementById('region-select');
-const provinceSelect     = document.getElementById('province-select');
-const municipalitySelect = document.getElementById('municipality-select');
-const barangaySelect     = document.getElementById('barangay-select');
+        // ─── Searchable Dropdown Component ───────────────────────────────────────────
+        // Converts a .sd-wrapper into a searchable dropdown.
+        // The wrapper must contain:
+        //   .sd-input       (readonly visible text)
+        //   input[type=hidden] (the actual form value)
+        //   .sd-dropdown > .sd-search + .sd-list > .sd-item[data-value]
 
-function resetSelect(sel, placeholder) {
-    sel.innerHTML = `<option value="">${placeholder}</option>`;
-    sel.disabled = true;
-}
+        function initSD(wrapperId, onSelect) {
+            const wrapper = document.getElementById(wrapperId);
+            const display = wrapper.querySelector('.sd-input');
+            const hidden = wrapper.querySelector('input[type=hidden]');
+            const dropdown = wrapper.querySelector('.sd-dropdown');
+            const search = wrapper.querySelector('.sd-search');
+            const list = wrapper.querySelector('.sd-list');
 
-function populateSelect(sel, items, valueKey, labelKey, preselected) {
-    items.forEach(item => {
-        const opt = document.createElement('option');
-        opt.value = item[labelKey];
-        opt.dataset.id = item[valueKey];
-        opt.textContent = item[labelKey];
-        if (item[labelKey] === preselected) opt.selected = true;
-        sel.appendChild(opt);
-    });
-    sel.disabled = false;
-}
-
-function syncAddress() {
-    const parts = [
-        document.getElementById('lot-no-field').value.trim(),
-        barangaySelect.value.trim(),
-        municipalitySelect.value.trim(),
-        provinceSelect.value.trim(),
-        regionSelect.value.trim(),
-    ].filter(Boolean);
-    document.getElementById('address-field').value = parts.join(', ');
-}
-
-regionSelect.addEventListener('change', function () {
-    resetSelect(provinceSelect, '-- Select Province --');
-    resetSelect(municipalitySelect, '-- Select Municipality --');
-    resetSelect(barangaySelect, '-- Select Barangay --');
-    const regionId = this.options[this.selectedIndex]?.dataset?.id;
-    if (!regionId) { syncAddress(); return; }
-    fetch(`edit.php?id=<?= $id ?>&ajax=provinces&region_id=${regionId}`)
-        .then(r => r.json())
-        .then(data => { populateSelect(provinceSelect, data, 'province_id', 'province_name', ''); syncAddress(); });
-});
-
-provinceSelect.addEventListener('change', function () {
-    resetSelect(municipalitySelect, '-- Select Municipality --');
-    resetSelect(barangaySelect, '-- Select Barangay --');
-    const provinceId = this.options[this.selectedIndex]?.dataset?.id;
-    if (!provinceId) { syncAddress(); return; }
-    fetch(`edit.php?id=<?= $id ?>&ajax=municipalities&province_id=${provinceId}`)
-        .then(r => r.json())
-        .then(data => { populateSelect(municipalitySelect, data, 'municipality_id', 'municipality_name', ''); syncAddress(); });
-});
-
-municipalitySelect.addEventListener('change', function () {
-    resetSelect(barangaySelect, '-- Select Barangay --');
-    const municipalityId = this.options[this.selectedIndex]?.dataset?.id;
-    if (!municipalityId) { syncAddress(); return; }
-    fetch(`edit.php?id=<?= $id ?>&ajax=barangays&municipality_id=${municipalityId}`)
-        .then(r => r.json())
-        .then(data => { populateSelect(barangaySelect, data, 'barangay_id', 'barangay_name', ''); syncAddress(); });
-});
-
-barangaySelect.addEventListener('change', syncAddress);
-document.getElementById('lot-no-field').addEventListener('input', syncAddress);
-
-// Restore saved location values on page load
-(function restoreLocation() {
-    if (!preselectedRegion) return;
-    const regionOption = [...regionSelect.options].find(o => o.value === preselectedRegion);
-    if (!regionOption) return;
-
-    fetch(`edit.php?id=<?= $id ?>&ajax=provinces&region_id=${regionOption.dataset.id}`)
-        .then(r => r.json())
-        .then(provinces => {
-            populateSelect(provinceSelect, provinces, 'province_id', 'province_name', preselectedProvince);
-            if (!preselectedProvince) { syncAddress(); return; }
-
-            const provOpt = [...provinceSelect.options].find(o => o.value === preselectedProvince);
-            if (!provOpt) { syncAddress(); return; }
-
-            fetch(`edit.php?id=<?= $id ?>&ajax=municipalities&province_id=${provOpt.dataset.id}`)
-                .then(r => r.json())
-                .then(municipalities => {
-                    populateSelect(municipalitySelect, municipalities, 'municipality_id', 'municipality_name', preselectedMunicipality);
-                    if (!preselectedMunicipality) { syncAddress(); return; }
-
-                    const munOpt = [...municipalitySelect.options].find(o => o.value === preselectedMunicipality);
-                    if (!munOpt) { syncAddress(); return; }
-
-                    fetch(`edit.php?id=<?= $id ?>&ajax=barangays&municipality_id=${munOpt.dataset.id}`)
-                        .then(r => r.json())
-                        .then(barangays => {
-                            populateSelect(barangaySelect, barangays, 'barangay_id', 'barangay_name', preselectedBarangay);
-                            syncAddress();
-                        });
+            function filterItems(q) {
+                const lower = q.toLowerCase();
+                let visCount = 0;
+                list.querySelectorAll('.sd-item').forEach(item => {
+                    // Search only the main text (first text node), not the hint span
+                    const mainText = (item.firstChild?.nodeType === 3 ? item.firstChild.textContent : item.textContent).toLowerCase();
+                    const show = !q || mainText.includes(lower);
+                    item.style.display = show ? '' : 'none';
+                    if (show) visCount++;
                 });
+                let emptyEl = list.querySelector('.sd-empty');
+                if (visCount === 0) {
+                    if (!emptyEl) {
+                        emptyEl = document.createElement('div');
+                        emptyEl.className = 'sd-empty';
+                        emptyEl.textContent = 'No results';
+                        list.appendChild(emptyEl);
+                    }
+                    emptyEl.style.display = '';
+                } else if (emptyEl) {
+                    emptyEl.style.display = 'none';
+                }
+            }
+
+            function openDropdown() {
+                // Close all other open dropdowns first
+                document.querySelectorAll('.sd-dropdown').forEach(d => {
+                    if (d !== dropdown) d.style.display = 'none';
+                });
+                dropdown.style.display = 'block';
+                search.value = '';
+                filterItems('');
+                search.focus();
+            }
+
+            function closeDropdown() {
+                dropdown.style.display = 'none';
+            }
+
+            display.addEventListener('click', () =>
+                dropdown.style.display === 'block' ? closeDropdown() : openDropdown()
+            );
+
+            // Allow typing in the display field to open + search
+            display.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    closeDropdown();
+                    return;
+                }
+                if (e.key === 'Backspace' || e.key === 'Delete') {
+                    display.value = '';
+                    hidden.value = '';
+                    closeDropdown();
+                    if (onSelect) onSelect(null);
+                    syncAddress();
+                    return;
+                }
+                if (e.key.length === 1) {
+                    openDropdown();
+                    search.value += e.key;
+                    filterItems(search.value);
+                }
+            });
+
+            search.addEventListener('input', () => filterItems(search.value));
+
+            list.addEventListener('mousedown', e => {
+                const item = e.target.closest('.sd-item');
+                if (!item || item.style.display === 'none') return;
+                e.preventDefault();
+                display.value = item.dataset.value;
+                hidden.value = item.dataset.value;
+                closeDropdown();
+                if (onSelect) onSelect(item);
+            });
+
+            document.addEventListener('click', e => {
+                if (!wrapper.contains(e.target)) closeDropdown();
+            });
+        }
+
+        // ─── Address sync ─────────────────────────────────────────────────────────────
+        function syncAddress() {
+            const parts = [
+                document.getElementById('lot-no-field').value.trim(),
+                document.getElementById('barangay-value').value.trim(),
+                document.getElementById('municipality-value').value.trim(),
+                document.getElementById('province-value').value.trim(),
+                document.getElementById('region-value').value.trim(),
+            ].filter(Boolean);
+            document.getElementById('address-field').value = parts.join(', ');
+        }
+
+        document.getElementById('lot-no-field').addEventListener('input', syncAddress);
+
+        // ─── Region — no auto-fill needed, just sync address ─────────────────────────
+        initSD('region-wrapper', item => syncAddress());
+
+        // ─── Province — auto-fills Region ────────────────────────────────────────────
+        initSD('province-wrapper', item => {
+            if (item) {
+                // Find the matching region item by region_id and set it
+                const regionItem = document.querySelector(`#region-wrapper .sd-item[data-id="${item.dataset.regionId}"]`);
+                if (regionItem) {
+                    document.getElementById('region-display').value = regionItem.dataset.value;
+                    document.getElementById('region-value').value = regionItem.dataset.value;
+                }
+            }
+            syncAddress();
         });
-})();
+
+        // ─── Municipality — auto-fills Province + Region, loads Barangays ────────────
+        initSD('municipality-wrapper', item => {
+            if (item) {
+                // Auto-fill province
+                document.getElementById('province-display').value = item.dataset.province;
+                document.getElementById('province-value').value = item.dataset.province;
+
+                // Auto-fill region
+                document.getElementById('region-display').value = item.dataset.region;
+                document.getElementById('region-value').value = item.dataset.region;
+
+                // Clear current barangay and load new list
+                document.getElementById('barangay-display').value = '';
+                document.getElementById('barangay-value').value = '';
+                loadBarangays(item.dataset.id);
+            }
+            syncAddress();
+        });
+
+        // ─── Barangay — just syncs address ───────────────────────────────────────────
+        initSD('barangay-wrapper', item => syncAddress());
+
+        // ─── Load barangays via AJAX ─────────────────────────────────────────────────
+        function loadBarangays(municipalityId, preselect) {
+            const barangayList = document.getElementById('barangay-list');
+            barangayList.innerHTML = '<div class="sd-empty">Loading...</div>';
+            fetch(`add.php?ajax=barangays&municipality_id=${municipalityId}`)
+                .then(r => r.json())
+                .then(barangays => {
+                    if (!barangays.length) {
+                        barangayList.innerHTML = '<div class="sd-empty">No barangays found</div>';
+                        return;
+                    }
+                    barangayList.innerHTML = barangays.map(b =>
+                        `<div class="sd-item" data-value="${b.barangay_name}" data-id="${b.barangay_id}">${b.barangay_name}</div>`
+                    ).join('');
+                    if (preselect) {
+                        const match = [...barangayList.querySelectorAll('.sd-item')].find(i => i.dataset.value === preselect);
+                        if (match) {
+                            document.getElementById('barangay-display').value = preselect;
+                            document.getElementById('barangay-value').value = preselect;
+                        }
+                    }
+                });
+        }
+
+        // ─── Restore state on POST validation failure ─────────────────────────────────
+        (function restoreState() {
+            if (!saved.municipality) return;
+            // Find municipality item to get its ID
+            const munItem = document.querySelector(`#municipality-wrapper .sd-item[data-value="${saved.municipality.replace(/"/g, '\\"')}"]`);
+            if (!munItem) return;
+            loadBarangays(munItem.dataset.id, saved.barangay);
+        })();
 
 // ─── Order Items Table ────────────────────────────────────────────────────────
 

@@ -4,18 +4,59 @@ require_once 'config.php';
 
 $conn = getDBConnection();
 
-// ─── Inline AJAX handler for barangays (loaded on-demand, too many to preload) ──
+// ─── Inline AJAX handler for location dropdowns (loaded on-demand) ──
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
-    if ($_GET['ajax'] === 'barangays') {
-        $id = (int)($_GET['municipality_id'] ?? 0);
-        if (!$id) { echo json_encode([]); exit; }
-        $s = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
-        $s->execute([$id]);
+    
+    if ($_GET['ajax'] === 'provinces') {
+        $region_id = (int)($_GET['region_id'] ?? 0);
+        if ($region_id) {
+            // Filter by region if provided
+            $s = $conn->prepare("SELECT province_id, province_name, region_id FROM table_province WHERE region_id = ? ORDER BY province_name");
+            $s->execute([$region_id]);
+        } else {
+            // Return all provinces if no filter
+            $s = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name");
+        }
         echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
-    } else {
-        echo json_encode([]);
+        exit;
     }
+    
+    if ($_GET['ajax'] === 'municipalities') {
+        $province_id = (int)($_GET['province_id'] ?? 0);
+        if ($province_id) {
+            // Filter by province if provided
+            $s = $conn->prepare("SELECT municipality_id, municipality_name, province_id FROM table_municipality WHERE province_id = ? ORDER BY municipality_name");
+            $s->execute([$province_id]);
+        } else {
+            // Return all municipalities with province info if no filter
+            $s = $conn->query("
+                SELECT m.municipality_id, m.municipality_name, m.province_id,
+                       p.province_name, p.region_id
+                FROM table_municipality m
+                JOIN table_province p ON p.province_id = m.province_id
+                ORDER BY m.municipality_name
+            ");
+        }
+        echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    }
+    
+    if ($_GET['ajax'] === 'barangays') {
+        $municipality_id = (int)($_GET['municipality_id'] ?? 0);
+        if (!$municipality_id) { 
+            echo json_encode([]); 
+            exit; 
+        }
+        // Barangays always need municipality_id (too many to load all)
+        $s = $conn->prepare("SELECT barangay_id, barangay_name, municipality_id FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
+        $s->execute([$municipality_id]);
+        echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    }
+    
+    // If no valid ajax action was matched
+    echo json_encode(['error' => 'Invalid ajax action']);
     exit;
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -556,7 +597,6 @@ function initSD(wrapperId, onSelect) {
         const lower = q.toLowerCase();
         let visCount = 0;
         list.querySelectorAll('.sd-item').forEach(item => {
-            // Search only the main text (first text node), not the hint span
             const mainText = (item.firstChild?.nodeType === 3 ? item.firstChild.textContent : item.textContent).toLowerCase();
             const show = !q || mainText.includes(lower);
             item.style.display = show ? '' : 'none';
@@ -577,7 +617,6 @@ function initSD(wrapperId, onSelect) {
     }
 
     function openDropdown() {
-        // Close all other open dropdowns first
         document.querySelectorAll('.sd-dropdown').forEach(d => {
             if (d !== dropdown) d.style.display = 'none';
         });
@@ -595,13 +634,17 @@ function initSD(wrapperId, onSelect) {
         dropdown.style.display === 'block' ? closeDropdown() : openDropdown()
     );
 
-    // Allow typing in the display field to open + search
     display.addEventListener('keydown', e => {
         if (e.key === 'Escape') { closeDropdown(); return; }
         if (e.key === 'Backspace' || e.key === 'Delete') {
             display.value = '';
             hidden.value  = '';
             closeDropdown();
+            
+            // Dispatch custom event with null
+            const event = new CustomEvent('sd-change', { detail: null });
+            wrapper.dispatchEvent(event);
+            
             if (onSelect) onSelect(null);
             syncAddress();
             return;
@@ -622,6 +665,17 @@ function initSD(wrapperId, onSelect) {
         display.value = item.dataset.value;
         hidden.value  = item.dataset.value;
         closeDropdown();
+        
+        // Dispatch custom event with selected item data
+        const event = new CustomEvent('sd-change', { 
+            detail: { 
+                id: item.dataset.id,
+                value: item.dataset.value,
+                element: item 
+            } 
+        });
+        wrapper.dispatchEvent(event);
+        
         if (onSelect) onSelect(item);
     });
 
@@ -660,6 +714,36 @@ initSD('province-wrapper', item => {
     syncAddress();
 });
 
+// Add region change handler to filter provinces
+document.getElementById('region-wrapper').addEventListener('sd-change', function(e) {
+    const regionId = e.detail?.id;
+    filterProvincesByRegion(regionId);
+});
+
+function filterProvincesByRegion(regionId) {
+    const provinceList = document.querySelector('#province-list');
+    if (!provinceList) return;
+    
+    if (!regionId) {
+        // Load all provinces
+        fetch('add.php?ajax=provinces')
+            .then(r => r.json())
+            .then(provinces => {
+                provinceList.innerHTML = provinces.map(p =>
+                    `<div class="sd-item" data-value="${p.province_name}" data-id="${p.province_id}" data-region-id="${p.region_id}">${p.province_name}</div>`
+                ).join('');
+            });
+    } else {
+        // Load provinces filtered by region
+        fetch(`add.php?ajax=provinces&region_id=${regionId}`)
+            .then(r => r.json())
+            .then(provinces => {
+                provinceList.innerHTML = provinces.map(p =>
+                    `<div class="sd-item" data-value="${p.province_name}" data-id="${p.province_id}" data-region-id="${p.region_id}">${p.province_name}</div>`
+                ).join('');
+            });
+    }
+}
 // ─── Municipality — auto-fills Province + Region, loads Barangays ────────────
 initSD('municipality-wrapper', item => {
     if (item) {
@@ -678,6 +762,47 @@ initSD('municipality-wrapper', item => {
     }
     syncAddress();
 });
+
+// Add province change handler to filter municipalities
+document.getElementById('province-wrapper').addEventListener('sd-change', function(e) {
+    const provinceId = e.detail?.id;
+    filterMunicipalitiesByProvince(provinceId);
+});
+
+function filterMunicipalitiesByProvince(provinceId) {
+    const municipalityList = document.querySelector('#municipality-list');
+    if (!municipalityList) return;
+    
+    if (!provinceId) {
+        // Load all municipalities
+        fetch('add.php?ajax=municipalities')
+            .then(r => r.json())
+            .then(municipalities => {
+                municipalityList.innerHTML = municipalities.map(m =>
+                    `<div class="sd-item" data-value="${m.municipality_name}" data-id="${m.municipality_id}" 
+                          data-province="${m.province_name}" data-province-id="${m.province_id}" 
+                          data-region-id="${m.region_id}">
+                        ${m.municipality_name} <span class="sd-hint">(${m.province_name})</span>
+                    </div>`
+                ).join('');
+            });
+    } else {
+        // Load municipalities filtered by province
+        fetch(`add.php?ajax=municipalities&province_id=${provinceId}`)
+            .then(r => r.json())
+            .then(municipalities => {
+                // Need to get province names for the hint
+                const provinceName = document.getElementById('province-display').value;
+                municipalityList.innerHTML = municipalities.map(m =>
+                    `<div class="sd-item" data-value="${m.municipality_name}" data-id="${m.municipality_id}" 
+                          data-province="${provinceName}" data-province-id="${m.province_id}" 
+                          data-region-id="${document.getElementById('region-value').value}">
+                        ${m.municipality_name} <span class="sd-hint">(${provinceName})</span>
+                    </div>`
+                ).join('');
+            });
+    }
+}
 
 // ─── Barangay — just syncs address ───────────────────────────────────────────
 initSD('barangay-wrapper', item => syncAddress());
