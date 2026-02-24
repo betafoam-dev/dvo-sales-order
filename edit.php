@@ -10,7 +10,6 @@ if (!$id) {
     exit;
 }
 
-// ─── Inline AJAX handlers ─────────────────────────────────────────────────────
 if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
     switch ($_GET['ajax']) {
@@ -29,7 +28,6 @@ if (isset($_GET['ajax'])) {
     }
     echo json_encode([]); exit;
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 $so = $conn->prepare("SELECT * FROM sales_order_forms WHERE id = ? AND deleted_at IS NULL");
 $so->execute([$id]);
@@ -44,6 +42,9 @@ $existingItems->execute([$id]);
 $savedItems = $existingItems->fetchAll();
 
 $inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
+$uoms = $conn->query("SELECT uom.id, uom.uom_name, uom.uom_code
+    FROM uoms uom
+    ORDER BY uom.uom_name")->fetchAll();
 
 $regions = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 
@@ -454,9 +455,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                                 value="<?= htmlspecialchars($item['item_description'] ?? '') ?>">
                                         </td>
                                         <td class="px-2 py-1.5">
-                                            <input type="text" name="items[<?= $idx ?>][uom]"
-                                                class="item-uom border border-gray-300 rounded px-2 py-1 text-sm w-16 focus:border-yellow-400 outline-none"
-                                                value="<?= htmlspecialchars($item['uom'] ?? '') ?>">
+                                            <select name="items[<?= $idx ?>][uom]"
+                                                    class="item-uom border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:border-blue-400 outline-none w-24">
+                                                <option value="">--</option>
+                                                <?php foreach ($uoms as $u): ?>
+                                                    <option value="<?= htmlspecialchars($u['uom_name']) ?>"
+                                                        <?= ($item['uom'] ?? '') === $u['uom_name'] ? 'selected' : '' ?>>
+                                                        <?= htmlspecialchars($u['uom_name']) ?>
+                                                    </option>
+                                                <?php endforeach; ?>
+                                            </select>
                                         </td>
                                         <td class="px-2 py-1.5">
                                             <input type="number" name="items[<?= $idx ?>][quantity]"
@@ -512,6 +520,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 <script>
 const inventories = <?= json_encode(array_combine(array_column($inventories, 'id'), $inventories)) ?>;
+const uoms = <?= json_encode($uoms) ?>;
 let rowIndex = <?= count($savedItems) ?>;
 
 // Preloaded saved location values
@@ -673,7 +682,9 @@ document.getElementById('add-row').addEventListener('click', function () {
         </td>
         <td class="px-2 py-1.5"><input type="text" name="items[${rowIndex}][item_code]" class="item-code border border-gray-300 rounded px-2 py-1 text-sm w-24 focus:border-yellow-400 outline-none"></td>
         <td class="px-2 py-1.5"><input type="text" name="items[${rowIndex}][item_description]" class="item-desc border border-gray-300 rounded px-2 py-1 text-sm w-36 focus:border-yellow-400 outline-none"></td>
-        <td class="px-2 py-1.5"><input type="text" name="items[${rowIndex}][uom]" class="item-uom border border-gray-300 rounded px-2 py-1 text-sm w-16 focus:border-yellow-400 outline-none"></td>
+        <td class="px-2 py-1.5">
+        <input type="text" name="items[${rowIndex}][uom]" class="item-uom border border-gray-300 rounded px-2 py-1 text-sm w-16 focus:border-yellow-400 outline-none">
+        </td>
         <td class="px-2 py-1.5"><input type="number" name="items[${rowIndex}][quantity]" class="item-qty border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-yellow-400 outline-none" min="0.0001" step="0.0001" value="1" required></td>
         <td class="px-2 py-1.5"><input type="number" name="items[${rowIndex}][unit_price]" class="item-price border border-gray-300 rounded px-2 py-1 text-sm w-24 focus:border-yellow-400 outline-none" min="0" step="0.01" value="0" required></td>
         <td class="px-2 py-1.5"><input type="text" class="item-amount border border-gray-200 rounded px-2 py-1 text-sm w-24 bg-gray-50 text-gray-600" readonly value="0.00"></td>
