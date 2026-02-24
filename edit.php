@@ -308,21 +308,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </div>
 
                         <!-- Address (hidden, auto-computed from location fields) -->
-                        <div>
+                        <div class="sm:col-span-2">
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Complete Address</label>
                             <input type="text" name="address" id="address-field"
-                                value="<?= htmlspecialchars($data['address']) ?>">
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"
+                                value="<?= htmlspecialchars($data['address']) ?>" disabled>
                         </div>
 
                         <!-- Lot No -->
                         <div>
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Lot No.</label>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Address Line<span class="text-xs text-gray-500">(Lot,Blk,house #,Street#)</span></label>
                             <input type="text" name="lot_no" id="lot-no-field"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['lot_no'] ?? '') ?>">
                         </div>
 
                         <!-- Region -->
-                        <div>
+                        <div class= "hidden">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
                             <div class="sd-wrapper" id="region-wrapper">
                                 <input type="text" class="sd-input" id="region-display"
@@ -347,7 +349,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                         <!-- Province -->
                         <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Province</label>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Province/City</label>
                             <div class="sd-wrapper" id="province-wrapper">
                                 <input type="text" class="sd-input" id="province-display"
                                     placeholder="-- Select Province --" readonly
