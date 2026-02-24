@@ -10,6 +10,27 @@ if (!$id) {
     exit;
 }
 
+// ─── Inline AJAX handlers ─────────────────────────────────────────────────────
+if (isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    switch ($_GET['ajax']) {
+        case 'provinces':
+            $s = $conn->prepare("SELECT province_id, province_name FROM table_province WHERE region_id = ? ORDER BY province_name");
+            $s->execute([(int)($_GET['region_id'] ?? 0)]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
+        case 'municipalities':
+            $s = $conn->prepare("SELECT municipality_id, municipality_name FROM table_municipality WHERE province_id = ? ORDER BY municipality_name");
+            $s->execute([(int)($_GET['province_id'] ?? 0)]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
+        case 'barangays':
+            $s = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
+            $s->execute([(int)($_GET['municipality_id'] ?? 0)]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
+    }
+    echo json_encode([]); exit;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 $so = $conn->prepare("SELECT * FROM sales_order_forms WHERE id = ? AND deleted_at IS NULL");
 $so->execute([$id]);
 $data = $so->fetch();
@@ -24,6 +45,8 @@ $savedItems = $existingItems->fetchAll();
 
 $inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
 
+$regions = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
+
 $errors = [];
 
 function generateUuid() {
@@ -37,24 +60,24 @@ function generateUuid() {
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fields = [
-        'customer_name',
-        'tin_no',
-        'order_date',
-        'address',
-        'contact_details',
-        'payment_terms',
-        'contact_person',
-        'required_delivery_date',
-        'deliver_to',
-        'remarks',
-        'special_instruction',
-        'status'
+        'customer_name', 'tin_no', 'order_date', 'address',
+        'contact_details', 'payment_terms', 'contact_person',
+        'required_delivery_date', 'deliver_to', 'remarks',
+        'special_instruction', 'status',
+        'lot_no', 'barangay', 'municipality', 'province', 'region'
     ];
     foreach ($fields as $f) $data[$f] = $_POST[$f] ?? $data[$f];
     $data['is_new'] = isset($_POST['is_new']) ? 1 : 0;
 
     if (!$data['customer_name']) $errors[] = 'Customer name is required.';
-    if (!$data['order_date']) $errors[] = 'SO Date is required.';
+    if (!$data['order_date'])    $errors[] = 'Order Date is required.';
+
+    // Condition: region required if any location field is filled
+    $locationFields = ['barangay', 'municipality', 'province', 'lot_no'];
+    $hasAnyLocation = array_filter(array_map(fn($f) => trim($data[$f] ?? ''), $locationFields));
+    if (!empty($hasAnyLocation) && empty(trim($data['region'] ?? ''))) {
+        $errors[] = 'Region is required when any location field is provided.';
+    }
 
     $items = [];
     foreach ($_POST['items'] ?? [] as $item) {
@@ -71,6 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $stmt = $conn->prepare("UPDATE sales_order_forms SET
                 customer_name=?, tin_no=?, order_date=?, address=?,
+                lot_no=?, barangay=?, municipality=?, province=?, region=?,
                 contact_details=?, payment_terms=?, contact_person=?, required_delivery_date=?,
                 deliver_to=?, is_new=?, remarks=?,
                 special_instruction=?, status=?, total_amount=?, updated_by=?, updated_at=NOW()
@@ -80,6 +104,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['tin_no'],
                 $data['order_date'],
                 $data['address'],
+                $data['lot_no'] ?? '',
+                $data['barangay'] ?? '',
+                $data['municipality'] ?? '',
+                $data['province'] ?? '',
+                $data['region'] ?? '',
                 $data['contact_details'],
                 $data['payment_terms'],
                 $data['contact_person'],
@@ -134,7 +163,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 } else {
                     $istmt_insert->execute([
                         generateUuid(),
-                        $data['uuid'],   // <-- SO uuid from the loaded record
+                        $data['uuid'],
                         $id,
                         $item['inventory_id'],
                         $item['item_code'] ?? '',
@@ -165,18 +194,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Edit Sales Order</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <style>
+        select:disabled { background-color: #f3f4f6; cursor: not-allowed; }
+    </style>
 </head>
-
 <body class="bg-gray-100 min-h-screen">
 
-    <!-- Navbar (yellow/warning theme to match original) -->
     <nav class="bg-yellow-400 shadow mb-6">
         <div class="max-w-full px-4 py-3 flex items-center justify-between">
             <a href="index.php" class="text-gray-800 font-bold text-lg flex items-center gap-2 hover:text-gray-600">
@@ -193,7 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             Edit Order <span class="text-gray-400 font-normal">#<?= htmlspecialchars($data['id']) ?></span>
         </h4>
 
-        <!-- Errors -->
         <?php if (!empty($errors)): ?>
             <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded px-4 py-3 text-sm">
                 <?php foreach ($errors as $e): ?>
@@ -212,18 +240,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
 
+                        <!-- Order Date -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Order Date <span class="text-red-500">*</span></label>
                             <input type="date" name="order_date"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars(substr($data['order_date'], 0, 10)) ?>" required>
                         </div>
+
+                        <!-- Customer Name -->
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Customer Name <span class="text-red-500">*</span></label>
                             <input type="text" name="customer_name"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['customer_name']) ?>" required>
                         </div>
+
+                        <!-- Is New Customer -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Is New Customer?</label>
                             <label class="flex items-center gap-2 mt-2 cursor-pointer">
@@ -232,24 +265,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 <span class="text-sm text-gray-700">Yes</span>
                             </label>
                         </div>
+
+                        <!-- TIN No -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">TIN No.</label>
                             <input type="text" name="tin_no"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['tin_no']) ?>">
                         </div>
-                        <div class="sm:col-span-2">
-                            <label class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-                            <input type="text" name="address"
-                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
+
+                        <!-- Address (hidden, auto-computed from location fields) -->
+                        <div>
+                            <input type="text" name="address" id="address-field"
                                 value="<?= htmlspecialchars($data['address']) ?>">
                         </div>
+
+                        <!-- Lot No -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Lot No.</label>
+                            <input type="text" name="lot_no" id="lot-no-field"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
+                                value="<?= htmlspecialchars($data['lot_no'] ?? '') ?>">
+                        </div>
+
+                        <!-- Region -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
+                            <select name="region" id="region-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white">
+                                <option value="">-- Select Region --</option>
+                                <?php foreach ($regions as $r): ?>
+                                    <option value="<?= htmlspecialchars($r['region_description']) ?>"
+                                        data-id="<?= $r['region_id'] ?>"
+                                        <?= ($data['region'] ?? '') === $r['region_description'] ? 'selected' : '' ?>>
+                                        <?= htmlspecialchars($r['region_description']) ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+
+                        <!-- Province -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Province</label>
+                            <select name="province" id="province-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
+                                disabled>
+                                <option value="">-- Select Province --</option>
+                            </select>
+                        </div>
+
+                        <!-- Municipality -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Municipality</label>
+                            <select name="municipality" id="municipality-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
+                                disabled>
+                                <option value="">-- Select Municipality --</option>
+                            </select>
+                        </div>
+
+                        <!-- Barangay -->
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-1">Barangay</label>
+                            <select name="barangay" id="barangay-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white"
+                                disabled>
+                                <option value="">-- Select Barangay --</option>
+                            </select>
+                        </div>
+
+                        <!-- Contact Person -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Contact Person</label>
                             <input type="text" name="contact_person"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['contact_person']) ?>">
                         </div>
+
+                        <!-- Contact Details -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Contact Details</label>
                             <input type="text" name="contact_details"
@@ -257,40 +350,50 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 value="<?= htmlspecialchars($data['contact_details']) ?>">
                         </div>
 
+                        <!-- Payment Terms -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Payment Terms</label>
                             <input type="text" name="payment_terms"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['payment_terms']) ?>">
                         </div>
+
+                        <!-- Deliver To -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Deliver To</label>
                             <input type="text" name="deliver_to"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars($data['deliver_to']) ?>">
                         </div>
+
+                        <!-- Required Delivery Date -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Required Delivery Date</label>
                             <input type="date" name="required_delivery_date"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"
                                 value="<?= htmlspecialchars(substr($data['required_delivery_date'] ?? '', 0, 10)) ?>">
                         </div>
+
+                        <!-- Remarks -->
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Remarks</label>
                             <textarea name="remarks" rows="2"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"><?= htmlspecialchars($data['remarks']) ?></textarea>
                         </div>
 
+                        <!-- Special Instruction -->
                         <div class="sm:col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Special Instruction</label>
                             <textarea name="special_instruction" rows="2"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                         </div>
+
+                        <!-- Status -->
                         <div>
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Status</label>
                             <select name="status"
                                 class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 outline-none bg-white">
-                                <?php foreach (['for adjustment', 'for so','cancelled'] as $s): ?>
+                                <?php foreach (['for adjustment', 'for so', 'cancelled'] as $s): ?>
                                     <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                                 <?php endforeach; ?>
                             </select>
@@ -407,59 +510,161 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 
-    <script>
-        const inventories = <?= json_encode(array_combine(array_column($inventories, 'id'), $inventories)) ?>;
-        let rowIndex = <?= count($savedItems) ?>;
+<script>
+const inventories = <?= json_encode(array_combine(array_column($inventories, 'id'), $inventories)) ?>;
+let rowIndex = <?= count($savedItems) ?>;
 
-        function recalcRow(row) {
-            const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
-            const price = parseFloat(row.querySelector('.item-price').value) || 0;
-            row.querySelector('.item-amount').value = (qty * price).toFixed(2);
-            recalcTotal();
-        }
+// Preloaded saved location values
+const preselectedRegion       = <?= json_encode($data['region'] ?? '') ?>;
+const preselectedProvince     = <?= json_encode($data['province'] ?? '') ?>;
+const preselectedMunicipality = <?= json_encode($data['municipality'] ?? '') ?>;
+const preselectedBarangay     = <?= json_encode($data['barangay'] ?? '') ?>;
 
-        function recalcTotal() {
-            let total = 0;
-            document.querySelectorAll('.item-amount').forEach(el => {
-                total += parseFloat(el.value.replace(/,/g, '')) || 0;
-            });
-            document.getElementById('grand-total').textContent = '₱' + total.toLocaleString('en-PH', {
-                minimumFractionDigits: 2
-            });
-        }
+const regionSelect       = document.getElementById('region-select');
+const provinceSelect     = document.getElementById('province-select');
+const municipalitySelect = document.getElementById('municipality-select');
+const barangaySelect     = document.getElementById('barangay-select');
 
-        function attachRowEvents(row) {
-            row.querySelector('.inv-select').addEventListener('change', function() {
-                const inv = inventories[this.value];
-                if (inv) {
-                    row.querySelector('.item-code').value = inv.stock_code;
-                    row.querySelector('.item-desc').value = inv.stock_name;
-                    row.querySelector('.item-uom').value = inv.uom;
-                }
-            });
-            row.querySelector('.item-qty').addEventListener('input', () => recalcRow(row));
-            row.querySelector('.item-price').addEventListener('input', () => recalcRow(row));
-            row.querySelector('.remove-row').addEventListener('click', function() {
-                if (document.querySelectorAll('.item-row').length > 1) {
-                    row.remove();
-                    recalcTotal();
-                }
-            });
-        }
+function resetSelect(sel, placeholder) {
+    sel.innerHTML = `<option value="">${placeholder}</option>`;
+    sel.disabled = true;
+}
 
-        document.querySelectorAll('.item-row').forEach(row => {
-            attachRowEvents(row);
-            recalcRow(row);
+function populateSelect(sel, items, valueKey, labelKey, preselected) {
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item[labelKey];
+        opt.dataset.id = item[valueKey];
+        opt.textContent = item[labelKey];
+        if (item[labelKey] === preselected) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    sel.disabled = false;
+}
+
+function syncAddress() {
+    const parts = [
+        document.getElementById('lot-no-field').value.trim(),
+        barangaySelect.value.trim(),
+        municipalitySelect.value.trim(),
+        provinceSelect.value.trim(),
+        regionSelect.value.trim(),
+    ].filter(Boolean);
+    document.getElementById('address-field').value = parts.join(', ');
+}
+
+regionSelect.addEventListener('change', function () {
+    resetSelect(provinceSelect, '-- Select Province --');
+    resetSelect(municipalitySelect, '-- Select Municipality --');
+    resetSelect(barangaySelect, '-- Select Barangay --');
+    const regionId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!regionId) { syncAddress(); return; }
+    fetch(`edit.php?id=<?= $id ?>&ajax=provinces&region_id=${regionId}`)
+        .then(r => r.json())
+        .then(data => { populateSelect(provinceSelect, data, 'province_id', 'province_name', ''); syncAddress(); });
+});
+
+provinceSelect.addEventListener('change', function () {
+    resetSelect(municipalitySelect, '-- Select Municipality --');
+    resetSelect(barangaySelect, '-- Select Barangay --');
+    const provinceId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!provinceId) { syncAddress(); return; }
+    fetch(`edit.php?id=<?= $id ?>&ajax=municipalities&province_id=${provinceId}`)
+        .then(r => r.json())
+        .then(data => { populateSelect(municipalitySelect, data, 'municipality_id', 'municipality_name', ''); syncAddress(); });
+});
+
+municipalitySelect.addEventListener('change', function () {
+    resetSelect(barangaySelect, '-- Select Barangay --');
+    const municipalityId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!municipalityId) { syncAddress(); return; }
+    fetch(`edit.php?id=<?= $id ?>&ajax=barangays&municipality_id=${municipalityId}`)
+        .then(r => r.json())
+        .then(data => { populateSelect(barangaySelect, data, 'barangay_id', 'barangay_name', ''); syncAddress(); });
+});
+
+barangaySelect.addEventListener('change', syncAddress);
+document.getElementById('lot-no-field').addEventListener('input', syncAddress);
+
+// Restore saved location values on page load
+(function restoreLocation() {
+    if (!preselectedRegion) return;
+    const regionOption = [...regionSelect.options].find(o => o.value === preselectedRegion);
+    if (!regionOption) return;
+
+    fetch(`edit.php?id=<?= $id ?>&ajax=provinces&region_id=${regionOption.dataset.id}`)
+        .then(r => r.json())
+        .then(provinces => {
+            populateSelect(provinceSelect, provinces, 'province_id', 'province_name', preselectedProvince);
+            if (!preselectedProvince) { syncAddress(); return; }
+
+            const provOpt = [...provinceSelect.options].find(o => o.value === preselectedProvince);
+            if (!provOpt) { syncAddress(); return; }
+
+            fetch(`edit.php?id=<?= $id ?>&ajax=municipalities&province_id=${provOpt.dataset.id}`)
+                .then(r => r.json())
+                .then(municipalities => {
+                    populateSelect(municipalitySelect, municipalities, 'municipality_id', 'municipality_name', preselectedMunicipality);
+                    if (!preselectedMunicipality) { syncAddress(); return; }
+
+                    const munOpt = [...municipalitySelect.options].find(o => o.value === preselectedMunicipality);
+                    if (!munOpt) { syncAddress(); return; }
+
+                    fetch(`edit.php?id=<?= $id ?>&ajax=barangays&municipality_id=${munOpt.dataset.id}`)
+                        .then(r => r.json())
+                        .then(barangays => {
+                            populateSelect(barangaySelect, barangays, 'barangay_id', 'barangay_name', preselectedBarangay);
+                            syncAddress();
+                        });
+                });
         });
+})();
 
-        document.getElementById('add-row').addEventListener('click', function() {
-            const tbody = document.getElementById('items-body');
-            const tr = document.createElement('tr');
-            tr.className = 'item-row';
-            const invOptions = Object.values(inventories).map(inv =>
-                `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
-            ).join('');
-            tr.innerHTML = `
+// ─── Order Items Table ────────────────────────────────────────────────────────
+
+function recalcRow(row) {
+    const qty   = parseFloat(row.querySelector('.item-qty').value)   || 0;
+    const price = parseFloat(row.querySelector('.item-price').value) || 0;
+    row.querySelector('.item-amount').value = (qty * price).toFixed(2);
+    recalcTotal();
+}
+
+function recalcTotal() {
+    let total = 0;
+    document.querySelectorAll('.item-amount').forEach(el => {
+        total += parseFloat(el.value.replace(/,/g, '')) || 0;
+    });
+    document.getElementById('grand-total').textContent = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
+}
+
+function attachRowEvents(row) {
+    row.querySelector('.inv-select').addEventListener('change', function () {
+        const inv = inventories[this.value];
+        if (inv) {
+            row.querySelector('.item-code').value = inv.stock_code;
+            row.querySelector('.item-desc').value = inv.stock_name;
+            row.querySelector('.item-uom').value  = inv.uom;
+        }
+    });
+    row.querySelector('.item-qty').addEventListener('input',   () => recalcRow(row));
+    row.querySelector('.item-price').addEventListener('input', () => recalcRow(row));
+    row.querySelector('.remove-row').addEventListener('click', function () {
+        if (document.querySelectorAll('.item-row').length > 1) {
+            row.remove(); recalcTotal();
+        }
+    });
+}
+
+document.querySelectorAll('.item-row').forEach(row => { attachRowEvents(row); recalcRow(row); });
+
+document.getElementById('add-row').addEventListener('click', function () {
+    const tbody = document.getElementById('items-body');
+    const tr = document.createElement('tr');
+    tr.className = 'item-row';
+    const invOptions = Object.values(inventories).map(inv =>
+        `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
+    ).join('');
+    tr.innerHTML = `
         <input type="hidden" name="items[${rowIndex}][item_id]" value="">
         <td class="px-2 py-1.5" style="min-width:220px">
             <select name="items[${rowIndex}][inventory_id]" class="inv-select w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:border-yellow-400 outline-none" required>
@@ -474,13 +679,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <td class="px-2 py-1.5"><input type="text" class="item-amount border border-gray-200 rounded px-2 py-1 text-sm w-24 bg-gray-50 text-gray-600" readonly value="0.00"></td>
         <td class="px-2 py-1.5"><button type="button" class="remove-row border border-red-300 text-red-500 hover:bg-red-50 rounded px-2 py-1 text-xs"><i class="bi bi-trash"></i></button></td>
     `;
-            tbody.appendChild(tr);
-            attachRowEvents(tr);
-            rowIndex++;
-        });
+    tbody.appendChild(tr);
+    attachRowEvents(tr);
+    rowIndex++;
+});
 
-        recalcTotal();
-    </script>
+recalcTotal();
+</script>
 </body>
-
 </html>

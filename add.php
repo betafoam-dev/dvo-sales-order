@@ -3,13 +3,48 @@ require_once 'auth.php';
 require_once 'config.php';
 
 $conn = getDBConnection();
+
+// ─── Inline AJAX handlers (no separate files needed) ─────────────────────────
+if (isset($_GET['ajax'])) {
+    header('Content-Type: application/json');
+    switch ($_GET['ajax']) {
+        case 'provinces':
+            $id = (int)($_GET['region_id'] ?? 0);
+            if (!$id) { echo json_encode([]); exit; }
+            $s = $conn->prepare("SELECT province_id, province_name FROM table_province WHERE region_id = ? ORDER BY province_name");
+            $s->execute([$id]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+            exit;
+
+        case 'municipalities':
+            $id = (int)($_GET['province_id'] ?? 0);
+            if (!$id) { echo json_encode([]); exit; }
+            $s = $conn->prepare("SELECT municipality_id, municipality_name FROM table_municipality WHERE province_id = ? ORDER BY municipality_name");
+            $s->execute([$id]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+            exit;
+
+        case 'barangays':
+            $id = (int)($_GET['municipality_id'] ?? 0);
+            if (!$id) { echo json_encode([]); exit; }
+            $s = $conn->prepare("SELECT barangay_id, barangay_name FROM table_barangay WHERE municipality_id = ? ORDER BY barangay_name");
+            $s->execute([$id]);
+            echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+            exit;
+    }
+    echo json_encode([]);
+    exit;
+}
+// ─────────────────────────────────────────────────────────────────────────────
+
 $errors = [];
 $data = [
     'customer_name' => '', 'tin_no' => '', 'so_no' => '',
     'order_date' => date('Y-m-d'), 'address' => '', 'contact_details' => '',
     'payment_terms' => '', 'contact_person' => '', 'required_delivery_date' => '',
     'deliver_to' => '', 'is_new' => 0,
-    'remarks' => '', 'special_instruction' => '', 'status' => 'for adjustment', 'total_amount' => 0
+    'remarks' => '', 'special_instruction' => '', 'status' => 'for adjustment', 'total_amount' => 0,
+    'lot_no' => '', 'barangay' => '', 'municipality' => '', 'province' => '', 'region' => ''
 ];
 
 function generateUuid() {
@@ -27,10 +62,20 @@ $inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom,
     LEFT JOIN warehouse_inventories wi ON wi.inventory_id = i.id AND wi.deleted_at IS NULL
     WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
 
+// Load regions for the dropdown
+$regions = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = array_merge($data, array_intersect_key($_POST, $data));
     if (!$data['customer_name']) $errors[] = 'Customer name is required.';
     if (!$data['order_date']) $errors[] = 'Order Date is required.';
+
+    // Condition: if any location field is filled, region must be selected
+    $locationFields = ['barangay', 'municipality', 'province', 'lot_no'];
+    $hasAnyLocation = array_filter(array_map(fn($f) => trim($data[$f]), $locationFields));
+    if (!empty($hasAnyLocation) && empty(trim($data['region']))) {
+        $errors[] = 'Region is required when any location field (Lot No, Barangay, Municipality, Province) is provided.';
+    }
 
     $items = [];
     $itemsRaw = $_POST['items'] ?? [];
@@ -51,15 +96,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         try {
             $soUuid = generateUuid();
             $stmt = $conn->prepare("INSERT INTO sales_order_forms
-                (sales_order_code, uuid, customer_name, tin_no, so_no, order_date, address, contact_details,
-                 payment_terms, contact_person, required_delivery_date, deliver_to, is_new,
-                remarks, special_instruction, status, total_amount,
+                (sales_order_code, uuid, customer_name, tin_no, so_no, order_date, address,
+                 lot_no, barangay, municipality, province, region,
+                 contact_details, payment_terms, contact_person, required_delivery_date,
+                 deliver_to, is_new, remarks, special_instruction, status, total_amount,
                  created_by, updated_by, created_at, updated_at)
-                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
+                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
             $stmt->execute([
                 $soUuid,
                 $data['customer_name'], $data['tin_no'], $data['so_no'],
-                $data['order_date'], $data['address'], $data['contact_details'], $data['payment_terms'],
+                $data['order_date'], $data['address'],
+                $data['lot_no'], $data['barangay'], $data['municipality'],
+                $data['province'], $data['region'],
+                $data['contact_details'], $data['payment_terms'],
                 $data['contact_person'], $data['required_delivery_date'] ?: null, $data['deliver_to'],
                 $data['is_new'] ? 1 : 0,
                 $data['remarks'], $data['special_instruction'], $data['status'], $total,
@@ -100,12 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         input[type=number]::-webkit-inner-spin-button { opacity: 1; }
-        select, input, textarea {
-            outline: none;
-        }
-        select:focus, input:focus, textarea:focus {
-            ring: 2px;
-        }
+        select, input, textarea { outline: none; }
+        select:focus, input:focus, textarea:focus { ring: 2px; }
+        select:disabled { background-color: #f3f4f6; cursor: not-allowed; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -175,11 +221,65 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     </div>
 
                     <!-- Address -->
-                    <div class="sm:col-span-2">
+                    <div >
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Address</label>
-                        <input type="text" name="address"
+                        <input type="text" name="address" id="address-field"
+                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"
+                            value="<?= htmlspecialchars($data['address']) ?>">
+                    </div>
+
+                    <!-- Lot No -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Lot No.</label>
+                        <input type="text" name="lot_no" id="lot-no-field"
                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"
-                               value="<?= htmlspecialchars($data['address']) ?>">
+                               value="<?= htmlspecialchars($data['lot_no']) ?>">
+                    </div>
+
+                    <!-- Region -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Region</label>
+                        <select name="region" id="region-select" 
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                            <option value="">-- Select Region --</option>
+                            <?php foreach ($regions as $r): ?>
+                                <option value="<?= htmlspecialchars($r['region_description']) ?>"
+                                    data-id="<?= $r['region_id'] ?>"
+                                    <?= $data['region'] === $r['region_description'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($r['region_description']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+
+                    <!-- Province -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Province</label>
+                        <select name="province" id="province-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white"
+                                disabled>
+                            <option value="">-- Select Province --</option>
+                        </select>
+                    </div>
+
+                    <!-- Municipality -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Municipality</label>
+                        <select name="municipality" id="municipality-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white"
+                                disabled>
+                            <option value="">-- Select Municipality --</option>
+                        </select>
+                    </div>
+
+                    <!-- Barangay -->
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Barangay</label>
+                        <select name="barangay" id="barangay-select"
+                                class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white"
+                                disabled>
+                            <option value="">-- Select Barangay --</option>
+                        </select>
                     </div>
 
                     <!-- Contact Person -->
@@ -363,7 +463,131 @@ const inventories = <?= json_encode(array_combine(
     $inventories
 )) ?>;
 
+// Pre-selected location values (used after POST validation failure to restore state)
+const preselectedRegion   = <?= json_encode($data['region']) ?>;
+const preselectedProvince = <?= json_encode($data['province']) ?>;
+const preselectedMunicipality = <?= json_encode($data['municipality']) ?>;
+const preselectedBarangay = <?= json_encode($data['barangay']) ?>;
+
 let rowIndex = <?= count($existingItems) ?>;
+
+// ─── Cascading Location Dropdowns ───────────────────────────────────────────
+
+const regionSelect       = document.getElementById('region-select');
+const provinceSelect     = document.getElementById('province-select');
+const municipalitySelect = document.getElementById('municipality-select');
+const barangaySelect     = document.getElementById('barangay-select');
+
+function syncAddress() {
+    const parts = [
+        document.getElementById('lot-no-field').value.trim(),
+        barangaySelect.value.trim(),
+        municipalitySelect.value.trim(),
+        provinceSelect.value.trim(),
+        regionSelect.value.trim(),
+    ].filter(Boolean);
+    document.getElementById('address-field').value = parts.join(', ');
+}
+
+document.getElementById('lot-no-field').addEventListener('input', syncAddress);
+regionSelect.addEventListener('change', syncAddress);
+provinceSelect.addEventListener('change', syncAddress);
+municipalitySelect.addEventListener('change', syncAddress);
+barangaySelect.addEventListener('change', syncAddress);
+
+function resetSelect(sel, placeholder) {
+    sel.innerHTML = `<option value="">${placeholder}</option>`;
+    sel.disabled = true;
+}
+
+function populateSelect(sel, items, valueKey, labelKey, preselected) {
+    items.forEach(item => {
+        const opt = document.createElement('option');
+        opt.value = item[labelKey]; // store name as value (matches what the model stores)
+        opt.dataset.id = item[valueKey];
+        opt.textContent = item[labelKey];
+        if (item[labelKey] === preselected) opt.selected = true;
+        sel.appendChild(opt);
+    });
+    sel.disabled = false;
+}
+
+regionSelect.addEventListener('change', function () {
+    resetSelect(provinceSelect, '-- Select Province --');
+    resetSelect(municipalitySelect, '-- Select Municipality --');
+    resetSelect(barangaySelect, '-- Select Barangay --');
+
+    const regionId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!regionId) return;
+
+    fetch(`add.php?ajax=provinces&region_id=${regionId}`)
+        .then(r => r.json())
+        .then(data => populateSelect(provinceSelect, data, 'province_id', 'province_name', ''));
+});
+
+provinceSelect.addEventListener('change', function () {
+    resetSelect(municipalitySelect, '-- Select Municipality --');
+    resetSelect(barangaySelect, '-- Select Barangay --');
+
+    const provinceId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!provinceId) return;
+
+    fetch(`add.php?ajax=municipalities&province_id=${provinceId}`)
+        .then(r => r.json())
+        .then(data => populateSelect(municipalitySelect, data, 'municipality_id', 'municipality_name', ''));
+});
+
+municipalitySelect.addEventListener('change', function () {
+    resetSelect(barangaySelect, '-- Select Barangay --');
+
+    const municipalityId = this.options[this.selectedIndex]?.dataset?.id;
+    if (!municipalityId) return;
+
+    fetch(`add.php?ajax=barangays&municipality_id=${municipalityId}`)
+        .then(r => r.json())
+        .then(data => populateSelect(barangaySelect, data, 'barangay_id', 'barangay_name', ''));
+});
+
+// Restore cascading state after a POST with validation errors
+(function restoreLocationState() {
+    if (!preselectedRegion) return;
+
+    // Region is already selected via PHP; get its ID from the rendered option
+    const regionOption = [...regionSelect.options].find(o => o.value === preselectedRegion);
+    if (!regionOption) return;
+    const regionId = regionOption.dataset.id;
+
+    fetch(`add.php?ajax=provinces&region_id=${regionId}`)
+        .then(r => r.json())
+        .then(provinces => {
+            populateSelect(provinceSelect, provinces, 'province_id', 'province_name', preselectedProvince);
+            if (!preselectedProvince) return;
+
+            const provOption = [...provinceSelect.options].find(o => o.value === preselectedProvince);
+            if (!provOption) return;
+            const provinceId = provOption.dataset.id;
+
+            fetch(`add.php?ajax=municipalities&province_id=${provinceId}`)
+                .then(r => r.json())
+                .then(municipalities => {
+                    populateSelect(municipalitySelect, municipalities, 'municipality_id', 'municipality_name', preselectedMunicipality);
+                    if (!preselectedMunicipality) return;
+
+                    const munOption = [...municipalitySelect.options].find(o => o.value === preselectedMunicipality);
+                    if (!munOption) return;
+                    const municipalityId = munOption.dataset.id;
+
+                    fetch(`add.php?ajax=barangays&municipality_id=${municipalityId}`)
+                        .then(r => r.json())
+                        .then(barangays => {
+                            populateSelect(barangaySelect, barangays, 'barangay_id', 'barangay_name', preselectedBarangay);
+                            syncAddress();
+                        });
+                });
+        });
+})();
+
+// ─── Order Items Table ───────────────────────────────────────────────────────
 
 function recalcRow(row) {
     const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
