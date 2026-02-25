@@ -436,7 +436,7 @@ window.appConfig = {
         barangay:     <?= json_encode($data['barangay']) ?>,
     },
     rowIndex: <?= count($savedItems) ?>,
-    editId: <?= $id ?>   // 👈 THIS IS IMPORTANT
+    editId: <?= $id ?> 
 };
 </script>
 <script src="js/edit.js"></script>

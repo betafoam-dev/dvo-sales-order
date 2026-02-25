@@ -89,7 +89,7 @@ initSD('province-wrapper', item => {
 
 document.getElementById('region-wrapper').addEventListener('sd-change', e => {
     const rid = e.detail?.id;
-    const url = rid ? `edit.php?id=<?= $id ?>&ajax=provinces&region_id=${rid}` : `edit.php?id=<?= $id ?>&ajax=provinces`;
+    const url = rid ? `edit.php?id=${editId}&ajax=provinces&region_id=${rid}` : `edit.php?id=${editId}&ajax=provinces`;
     fetch(url).then(r => r.json()).then(provinces => {
         document.querySelector('#province-wrapper .sd-list').innerHTML = provinces.map(p =>
             `<div class="sd-item" data-value="${p.province_name}" data-id="${p.province_id}" data-region-id="${p.region_id}">${p.province_name}</div>`
@@ -109,7 +109,7 @@ initSD('municipality-wrapper', item => {
 
 document.getElementById('province-wrapper').addEventListener('sd-change', e => {
     const pid = e.detail?.id;
-    const url = pid ? `edit.php?id=<?= $id ?>&ajax=municipalities&province_id=${pid}` : `edit.php?id=<?= $id ?>&ajax=municipalities`;
+    const url = pid ? `edit.php?id=${editId}&ajax=municipalities&province_id=${pid}` : `edit.php?id=${editId}&ajax=municipalities`;
     fetch(url).then(r => r.json()).then(municipalities => {
         const pname = document.getElementById('province-display').value;
         const rval  = document.getElementById('region-value').value;
@@ -128,7 +128,7 @@ initSD('barangay-wrapper', () => syncAddress());
 function loadBarangays(municipalityId, preselect) {
     const list = document.getElementById('barangay-list');
     list.innerHTML = '<div class="sd-empty">Loading...</div>';
-    fetch(`edit.php?id=<?= $id ?>&ajax=barangays&municipality_id=${municipalityId}`)
+    fetch(`edit.php?id=${editId}&ajax=barangays&municipality_id=${municipalityId}`)
         .then(r => r.json())
         .then(barangays => {
             if (!barangays.length) { list.innerHTML = '<div class="sd-empty">No barangays found</div>'; return; }
