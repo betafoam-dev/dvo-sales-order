@@ -72,6 +72,12 @@ $inventories = $stmt->fetchAll();
         </div>
     </div>
 
+    <div class="flex flex-row gap-2 text-[10px] mb-2 items-center">
+        <span><i class="bi bi-exclamation-triangle-fill text-danger"></i> Below minimum qty</span>
+        <span><span class="font-semibold text-red-600">Red qty</span> = at or below min &nbsp;
+              <span class="font-semibold text-green-600">Green qty</span> = above min</span>
+    </div>
+
     <div class="card shadow-sm border-0">
         <div class="p-2">
             <form class="row g-2 mb-3" method="GET">
@@ -128,40 +134,31 @@ $inventories = $stmt->fetchAll();
                     </tbody>
                 </table>
             </div>
-
-            <?php if ($totalPages > 1): ?>
-            <nav class="mt-3">
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item <?= $page === 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">‹</a>
-                    </li>
-                    <?php
-                    $start = max(1, $page - 2);
-                    $end = min($totalPages, $page + 2);
-                    if ($start > 1): ?><li class="page-item disabled"><span class="page-link">…</span></li><?php endif;
-                    for ($p = $start; $p <= $end; $p++): ?>
-                    <li class="page-item <?= $p === $page ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $p ?>&search=<?= urlencode($search) ?>"><?= $p ?></a>
-                    </li>
-                    <?php endfor;
-                    if ($end < $totalPages): ?><li class="page-item disabled"><span class="page-link">…</span></li><?php endif; ?>
-                    <li class="page-item <?= $page === $totalPages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">›</a>
-                    </li>
-                </ul>
-            </nav>
-            <?php endif; ?>
         </div>
     </div>
 
-    <!-- Legend -->
-    <div class="d-flex gap-3 mt-2 text-muted small">
-        <span><i class="bi bi-check-circle-fill text-success"></i> Active &nbsp;
-              <i class="bi bi-x-circle-fill text-danger"></i> Inactive</span>
-        <span><i class="bi bi-exclamation-triangle-fill text-danger"></i> Below minimum qty</span>
-        <span><span class="qty-low fw-semibold">Red qty</span> = at or below min &nbsp;
-              <span class="qty-ok fw-semibold">Green qty</span> = above min</span>
-    </div>
+    <?php if ($totalPages > 1): ?>
+        <nav class="mt-2">
+            <ul class="flex gap-1 mb-0">
+                <li class="<?= $page === 1 ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-blue-400 <?= $page === 1 ? 'pointer-events-none' : '' ?>" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">‹</a>
+                </li>
+                <?php
+                $start = max(1, $page - 2);
+                $end = min($totalPages, $page + 2);
+                if ($start > 1): ?><li class="opacity-50 bg-gray-200 cursor-not-allowed"><span class="px-2 py-1 border border-gray-300 rounded">…</span></li><?php endif;
+                for ($p = $start; $p <= $end; $p++): ?>
+                <li class="">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-blue-400 <?= $p === $page ? 'bg-blue-600 text-white' : '' ?>" href="?page=<?= $p ?>&search=<?= urlencode($search) ?>"><?= $p ?></a>
+                </li>
+                <?php endfor;
+                if ($end < $totalPages): ?><li class="opacity-50 cursor-not-allowed"><span class="px-2 py-1 border border-gray-300 rounded">…</span></li><?php endif; ?>
+                <li class="<?= $page === $totalPages ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-100 <?= $page === $totalPages ? 'pointer-events-none' : '' ?>" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">›</a>
+                </li>
+            </ul>
+        </nav>
+    <?php endif; ?>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

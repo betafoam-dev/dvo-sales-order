@@ -120,7 +120,7 @@ $orders = $stmt->fetchAll();
                 <table class="w-full min-w-max text-sm text-left">
                     <thead class="bg-gray-50 border-y border-gray-200">
                         <tr>
-                            <?php foreach (['#','SO Code','SO No.','SO Date','Customer','Total Amount','Status','Created By','Actions'] as $th): ?>
+                            <?php foreach (['Actions','#','SO Code','SO No.','SO Date','Customer','Total Amount','Status','Created By'] as $th): ?>
                                 <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500"><?= $th ?></th>
                             <?php endforeach; ?>
                         </tr>
@@ -133,6 +133,28 @@ $orders = $stmt->fetchAll();
                         <?php else: ?>
                             <?php foreach ($orders as $i => $o): ?>
                             <tr class="hover:bg-gray-50 transition">
+                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-[11px] md:text-base whitespace-nowrap">
+                                    <div class="flex items-center gap-1">
+                                        <a href="view.php?id=<?= $o['id'] ?>" title="View"
+                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1.5 py-0.5 md:px-2 md:text-xs text-[10px]">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
+                                            <a href="edit.php?id=<?= $o['id'] ?>" title="Edit"
+                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
+                                            <a href="?delete=<?= $o['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $page ?>"
+                                            title="Delete"
+                                            onclick="return confirm('Delete this sales order?')"
+                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
+                                                <i class="bi bi-trash"></i>
+                                            </a>
+                                        <?php endif; ?>
+                                    </div>
+                                </td>
                                 <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-400 md:text-xs text-[5px] whitespace-nowrap"><?= $offset + $i + 1 ?></td>
                                 <td class="md:px-3 px-1 text-[8px] md:text-base py-0.5 md:py-2.5 whitespace-nowrap">
                                     <a href="view.php?id=<?= $o['id'] ?>" class="font-semibold text-blue-600 hover:underline">
@@ -161,28 +183,6 @@ $orders = $stmt->fetchAll();
                                     </span>
                                 </td>
                                 <td class="md:px-3 px-1 py-0.5 md:py-2.5 md:text-xs text-[8px] text-gray-400 whitespace-nowrap"><?= htmlspecialchars($o['created_by_name'] ?? '—') ?></td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-[11px] md:text-base whitespace-nowrap">
-                                    <div class="flex items-center gap-1">
-                                        <a href="view.php?id=<?= $o['id'] ?>" title="View"
-                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1.5 py-0.5 md:px-2 md:text-xs text-[10px]">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
-                                            <a href="edit.php?id=<?= $o['id'] ?>" title="Edit"
-                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
-                                                <i class="bi bi-pencil"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
-                                            <a href="?delete=<?= $o['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $page ?>"
-                                            title="Delete"
-                                            onclick="return confirm('Delete this sales order?')"
-                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
-                                                <i class="bi bi-trash"></i>
-                                            </a>
-                                        <?php endif; ?>
-                                    </div>
-                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
