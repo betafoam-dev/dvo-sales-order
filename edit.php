@@ -50,6 +50,7 @@ $savedItems = $siStmt->fetchAll();
 $inventories    = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
 $uoms           = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 $customers      = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
+$paymentTerms = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
 $regions        = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 $allProvinces   = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name")->fetchAll(PDO::FETCH_ASSOC);
 $allMunicipalities = $conn->query("SELECT m.municipality_id, m.municipality_name, m.province_id, p.province_name, p.region_id, r.region_description
@@ -223,17 +224,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         </select>
                     </div>
 
-                    <div class="sm:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Billing Address</label>
-                        <input type="text" name="billing_address" id="billing-address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
-                    </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Is New Customer?</label>
                         <label class="flex items-center gap-2 mt-2 cursor-pointer">
                             <input type="checkbox" name="is_new" value="1" <?= $data['is_new'] ? 'checked' : '' ?> class="w-4 h-4 text-yellow-500 border-gray-300 rounded">
                             <span class="text-sm text-gray-700">Yes</span>
                         </label>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Billing Address</label>
+                        <input type="text" name="billing_address" id="billing-address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
                     </div>
 
                     <div>
@@ -334,7 +335,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Payment Terms</label>
-                        <input type="text" name="payment_terms" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['payment_terms']) ?>">
+                        <select name="payment_terms" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                            <option value="">-- Select --</option>
+                            <?php foreach ($paymentTerms as $pt): ?>
+                                <option value="<?= htmlspecialchars($pt['description']) ?>" <?= $data['payment_terms'] === $pt['description'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($pt['description']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
 
                     <div>
