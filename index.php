@@ -24,12 +24,24 @@ $page = max(1, (int)($_GET['page'] ?? 1));
 $limit = 15;
 $offset = ($page - 1) * $limit;
 
+// --- Role-based access ---
+$userRole = $_SESSION['user_role'] ?? ''; // assumes role name is stored in session
+$isAdmin = strtolower($userRole) === 'administrator';
+$isSales = strtolower($userRole) === 'sales';
+
 $where = "WHERE sof.deleted_at IS NULL";
 $params = [];
+
+// If sales role, restrict to own records only
+if ($isSales) {
+    $where .= " AND sof.created_by = ?";
+    $params[] = $_SESSION['user_id'];
+}
+
 if ($search !== '') {
     $where .= " AND (sof.sales_order_code LIKE ? OR sof.customer_name LIKE ? OR sof.so_no LIKE ?)";
     $s = "%$search%";
-    $params = [$s, $s, $s];
+    $params = array_merge($params, [$s, $s, $s]);
 }
 
 $total = $conn->prepare("SELECT COUNT(*) FROM sales_order_forms sof $where");
