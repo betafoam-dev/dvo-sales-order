@@ -440,5 +440,33 @@ window.appConfig = {
 };
 </script>
 <script src="js/edit.js"></script>
+<script src="js/searchable-select.js"></script>
+<script>
+function initInvSelectRow(row) {
+    const sel = row.querySelector('.inv-select');
+    if (!sel || sel.dataset.ssInit) return;
+    sel.dataset.ssInit = '1';
+    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
+    ss.wrapper.addEventListener('ss:change', e => {
+        if (!e.detail) return;
+        const inv = (window.appData || window.appConfig).inventories[e.detail.value];
+        if (!inv) return;
+        row.querySelector('.item-code').value = inv.stock_code;
+        row.querySelector('.item-desc').value = inv.stock_name;
+        row.querySelector('.item-uom').value  = inv.uom;
+    });
+}
+
+// Customer
+const customerSS = new SearchableSelect(document.getElementById('customer-select'), { placeholder: 'Search customer...' });
+customerSS.wrapper.addEventListener('ss:change', e => {
+    document.getElementById('billing-address-field').value = e.detail?.data?.address || '';
+});
+
+// Existing rows
+document.querySelectorAll('.inv-select').forEach(sel => {
+    initInvSelectRow(sel.closest('tr'));
+});
+</script>
 </body>
 </html>
