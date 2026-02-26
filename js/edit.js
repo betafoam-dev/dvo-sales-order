@@ -162,10 +162,13 @@ function recalcTotal() {
 }
 
 function attachRowEvents(row) {
-    row.querySelector('.inv-select').addEventListener('change', function () {
+    const invSel = row.querySelector('.inv-select');
+    if (invSel) {
+        invSel.addEventListener('change', function () {
         const inv = inventories[this.value];
         if (inv) { row.querySelector('.item-code').value = inv.stock_code; row.querySelector('.item-desc').value = inv.stock_name; row.querySelector('.item-uom').value = inv.uom; }
     });
+    }
     row.querySelector('.item-qty').addEventListener('input',   () => recalcRow(row));
     row.querySelector('.item-price').addEventListener('input', () => recalcRow(row));
     row.querySelector('.remove-row').addEventListener('click', () => {
@@ -203,6 +206,7 @@ document.getElementById('add-row').addEventListener('click', function () {
         <td class="px-2 py-1.5"><button type="button" class="remove-row border border-red-300 text-red-500 hover:bg-red-50 rounded px-2 py-1 text-xs"><i class="bi bi-trash"></i></button></td>
     `;
     document.getElementById('items-body').appendChild(tr);
+    if (typeof initInvSelectRow === 'function') initInvSelectRow(tr);
     attachRowEvents(tr);
     rowIndex++;
 });

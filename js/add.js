@@ -201,6 +201,7 @@ document.getElementById('add-row').addEventListener('click', function () {
         <td class="px-2 py-1.5"><button type="button" class="remove-row border border-red-300 text-red-500 hover:bg-red-50 rounded px-2 py-1 text-xs"><i class="bi bi-trash"></i></button></td>
     `;
     document.getElementById('items-body').appendChild(tr);
+    if (typeof initInvSelectRow === 'function') initInvSelectRow(tr);
     attachRowEvents(tr);
     rowIndex++;
 });

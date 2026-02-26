@@ -430,5 +430,44 @@ window.appData = {
 };
 </script>
 <script src="js/add.js"></script>
+<script src="js/searchable-select.js"></script>
+<script>
+// Customer
+const customerSS = new SearchableSelect(document.getElementById('customer-select'), { placeholder: 'Search customer...' });
+customerSS.wrapper.addEventListener('ss:change', e => {
+    document.getElementById('billing-address-field').value = e.detail?.data?.address || '';
+});
+
+// Inventory items (existing rows)
+document.querySelectorAll('.inv-select').forEach(sel => {
+    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
+    ss.wrapper.addEventListener('ss:change', e => {
+        if (!e.detail) return;
+        const inv = (window.appData || window.appConfig).inventories[e.detail.value];
+        if (!inv) return;
+        const row = ss.wrapper.closest('tr');
+        row.querySelector('.item-code').value = inv.stock_code;
+        row.querySelector('.item-desc').value = inv.stock_name;
+        row.querySelector('.item-uom').value  = inv.uom;
+    });
+});
+
+// Patch add-row to convert new inv-select after row is built
+const addRowBtn = document.getElementById('add-row');
+addRowBtn.addEventListener('ss:init-row', e => {
+    const row = e.detail;
+    const sel = row.querySelector('.inv-select');
+    if (!sel) return;
+    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
+    ss.wrapper.addEventListener('ss:change', ev => {
+        if (!ev.detail) return;
+        const inv = (window.appData || window.appConfig).inventories[ev.detail.value];
+        if (!inv) return;
+        row.querySelector('.item-code').value = inv.stock_code;
+        row.querySelector('.item-desc').value = inv.stock_name;
+        row.querySelector('.item-uom').value  = inv.uom;
+    });
+});
+</script>
 </body>
 </html>
