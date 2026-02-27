@@ -48,10 +48,10 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-sky-300 mb-4 no-print">
+<nav class="navbar navbar-dark bg-sky-400 mb-4 no-print">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold text-dark" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
-        <span class="text-dark small"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+        <a class="text-sm text-white" href="index.php"><i class="bi bi-arrow-left me-2"></i>Back</a>
+        <span class="text-sm text-white"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
     </div>
 </nav>
 
@@ -158,8 +158,53 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
         </div>
     </div>
 
-    <!-- Items -->
-    <div class="card shadow-sm border-0 mb-3">
+    <div class="card block print:hidden shadow-sm border-0 mb-3">
+        <div class="card-body">
+            <div class="section-title">Order Items</div>
+            <?php foreach ($orderItems as $i => $item): ?>
+            <div class="grid grid-cols-1 gap-2 p-2 border border-gray-400">
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1"># <?= $i + 1 ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">Item Code:</p>
+                    <p class="text-sm"><?= htmlspecialchars($item['item_code'] ?? '—') ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">Description:</p>
+                    <p class="text-sm"><?= htmlspecialchars($item['item_description'] ?? '—') ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">UOM:</p>
+                    <p class="text-sm"><?= htmlspecialchars($item['uom'] ?? '—') ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">Qty:</p>
+                    <p class="text-sm"><?= number_format($item['quantity'], 2) ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">Unit Price:</p>
+                    <p class="text-sm">₱<?= number_format($item['unit_price'], 2) ?></p>
+                </div>
+                <div class="grid grid-cols-1">
+                    <p class="font-bold mb-1">Amount:</p>
+                    <p class="text-sm">₱<?= number_format($item['amount'], 2) ?></p>
+                </div>
+            </div>
+            <?php endforeach; ?>
+            <?php if (empty($orderItems)): ?>
+            <div class="grid grid-cols-1 gap-2 p-2 border border-gray-400">
+                <p class="text-center text-gray-300">No items found.</p>
+            </div>
+            <?php endif; ?>
+            <div class="grid grid-cols-1 mt-2">
+                <p class="font-bold mb-1 text-center">Total Amount: <b class="text-blue-700">₱<?= number_format($data['total_amount'] ?? 0, 2) ?></b></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Items: For Printing-->
+    <div class="card print:block hidden shadow-sm border-0 mb-3">
         <div class="card-body">
             <div class="section-title">Order Items</div>
             <div class="table-responsive">
