@@ -31,6 +31,7 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
     <meta charset="UTF-8">
     <title>View Sales Order - <?= htmlspecialchars($data['sales_order_code']) ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -47,7 +48,7 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-info mb-4 no-print">
+<nav class="navbar navbar-dark bg-sky-300 mb-4 no-print">
     <div class="container-fluid">
         <a class="navbar-brand fw-bold text-dark" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
         <span class="text-dark small"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
