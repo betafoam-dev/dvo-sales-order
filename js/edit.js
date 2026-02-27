@@ -1,16 +1,16 @@
 const inventories = window.appConfig.inventories;
-const uoms        = window.appConfig.uoms;
-const saved       = window.appConfig.saved;
-let rowIndex      = window.appConfig.rowIndex;
-const editId      = window.appConfig.editId;
+const uoms = window.appConfig.uoms;
+const saved = window.appConfig.saved;
+let rowIndex = window.appConfig.rowIndex;
+const editId = window.appConfig.editId;
 
 function initSD(wrapperId, onSelect) {
-    const wrapper  = document.getElementById(wrapperId);
-    const display  = wrapper.querySelector('.sd-input');
-    const hidden   = wrapper.querySelector('input[type=hidden]');
+    const wrapper = document.getElementById(wrapperId);
+    const display = wrapper.querySelector('.sd-input');
+    const hidden = wrapper.querySelector('input[type=hidden]');
     const dropdown = wrapper.querySelector('.sd-dropdown');
-    const search   = wrapper.querySelector('.sd-search');
-    const list     = wrapper.querySelector('.sd-list');
+    const search = wrapper.querySelector('.sd-search');
+    const list = wrapper.querySelector('.sd-list');
 
     function filterItems(q) {
         const lower = q.toLowerCase();
@@ -100,7 +100,7 @@ document.getElementById('region-wrapper').addEventListener('sd-change', e => {
 initSD('municipality-wrapper', item => {
     if (item) {
         document.getElementById('province-display').value = document.getElementById('province-value').value = item.dataset.province;
-        document.getElementById('region-display').value   = document.getElementById('region-value').value   = item.dataset.region;
+        document.getElementById('region-display').value = document.getElementById('region-value').value = item.dataset.region;
         document.getElementById('barangay-display').value = document.getElementById('barangay-value').value = '';
         loadBarangays(item.dataset.id);
     }
@@ -112,7 +112,7 @@ document.getElementById('province-wrapper').addEventListener('sd-change', e => {
     const url = pid ? `edit.php?id=${editId}&ajax=municipalities&province_id=${pid}` : `edit.php?id=${editId}&ajax=municipalities`;
     fetch(url).then(r => r.json()).then(municipalities => {
         const pname = document.getElementById('province-display').value;
-        const rval  = document.getElementById('region-value').value;
+        const rval = document.getElementById('region-value').value;
         document.querySelector('#municipality-wrapper .sd-list').innerHTML = municipalities.map(m =>
             `<div class="sd-item" data-value="${m.municipality_name}" data-id="${m.municipality_id}"
                   data-province="${pname || m.province_name}" data-province-id="${m.province_id}"
@@ -149,7 +149,7 @@ function loadBarangays(municipalityId, preselect) {
 })();
 
 function recalcRow(row) {
-    const qty   = parseFloat(row.querySelector('.item-qty').value)   || 0;
+    const qty = parseFloat(row.querySelector('.item-qty').value) || 0;
     const price = parseFloat(row.querySelector('.item-price').value) || 0;
     row.querySelector('.item-amount').value = (qty * price).toFixed(2);
     recalcTotal();
@@ -157,7 +157,7 @@ function recalcRow(row) {
 
 function recalcTotal() {
     let total = 0;
-    document.querySelectorAll('.item-amount').forEach(el => total += parseFloat(el.value.replace(/,/g,'')) || 0);
+    document.querySelectorAll('.item-amount').forEach(el => total += parseFloat(el.value.replace(/,/g, '')) || 0);
     document.getElementById('grand-total').textContent = '₱' + total.toLocaleString('en-PH', { minimumFractionDigits: 2 });
 }
 
@@ -165,11 +165,15 @@ function attachRowEvents(row) {
     const invSel = row.querySelector('.inv-select');
     if (invSel) {
         invSel.addEventListener('change', function () {
-        const inv = inventories[this.value];
-        if (inv) { row.querySelector('.item-code').value = inv.stock_code; row.querySelector('.item-desc').value = inv.stock_name; row.querySelector('.item-uom').value = inv.uom; }
-    });
+            const inv = inventories[this.value];
+            if (inv) {
+                row.querySelector('.item-code').value = inv.stock_code;
+                row.querySelector('.item-desc').value = inv.stock_name;
+                row.querySelector('.item-uom').value = inv.uom;
+            }
+        });
     }
-    row.querySelector('.item-qty').addEventListener('input',   () => recalcRow(row));
+    row.querySelector('.item-qty').addEventListener('input', () => recalcRow(row));
     row.querySelector('.item-price').addEventListener('input', () => recalcRow(row));
     row.querySelector('.remove-row').addEventListener('click', () => {
         if (document.querySelectorAll('.item-row').length > 1) { row.remove(); recalcTotal(); }
@@ -183,31 +187,64 @@ const invOptions = Object.values(inventories).map(inv =>
     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
 ).join('');
 
+// ── Add Item: builds a div card row and calls initInvSelectRow for SearchableSelect ──
 document.getElementById('add-row').addEventListener('click', function () {
-    const tr = document.createElement('tr');
-    tr.className = 'item-row';
-    tr.innerHTML = `
+    const row = document.createElement('div');
+    row.className = 'item-row';
+    row.innerHTML = `
         <input type="hidden" name="items[${rowIndex}][item_id]" value="">
-        <td class="px-2 py-1.5" style="min-width:220px">
-            <select name="items[${rowIndex}][inventory_id]" class="inv-select w-full border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:border-yellow-400" required>
+
+        <div class="item-field">
+            <label class="item-label">Item</label>
+            <select name="items[${rowIndex}][inventory_id]" class="inv-select item-input" required>
                 <option value="">-- Select Item --</option>${invOptions}
             </select>
-        </td>
-        <td class="px-2 py-1.5"><input type="text" name="items[${rowIndex}][item_code]" class="item-code border border-gray-300 rounded px-2 py-1 text-sm w-24 focus:border-yellow-400"></td>
-        <td class="px-2 py-1.5"><input type="text" name="items[${rowIndex}][item_description]" class="item-desc border border-gray-300 rounded px-2 py-1 text-sm w-36 focus:border-yellow-400"></td>
-        <td class="px-2 py-1.5">
-            <select name="items[${rowIndex}][uom]" class="item-uom border border-gray-300 rounded px-2 py-1 text-sm bg-white focus:border-yellow-400 w-24">
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">Item Code</label>
+            <input type="text" name="items[${rowIndex}][item_code]" class="item-code item-input">
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">Description</label>
+            <input type="text" name="items[${rowIndex}][item_description]" class="item-desc item-input">
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">UOM</label>
+            <select name="items[${rowIndex}][uom]" class="item-uom item-input">
                 <option value="">--</option>${uomOptions}
             </select>
-        </td>
-        <td class="px-2 py-1.5"><input type="number" name="items[${rowIndex}][quantity]" class="item-qty border border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-yellow-400" min="0.0001" step="0.0001" value="1" required></td>
-        <td class="px-2 py-1.5"><input type="number" name="items[${rowIndex}][unit_price]" class="item-price border border-gray-300 rounded px-2 py-1 text-sm w-24 focus:border-yellow-400" min="0" step="0.01" value="0" required></td>
-        <td class="px-2 py-1.5"><input type="text" class="item-amount border border-gray-200 rounded px-2 py-1 text-sm w-24 bg-gray-50 text-gray-600" readonly value="0.00"></td>
-        <td class="px-2 py-1.5"><button type="button" class="remove-row border border-red-300 text-red-500 hover:bg-red-50 rounded px-2 py-1 text-xs"><i class="bi bi-trash"></i></button></td>
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">Qty</label>
+            <input type="number" name="items[${rowIndex}][quantity]" class="item-qty item-input" min="0.0001" step="0.0001" value="1" required>
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">Unit Price</label>
+            <input type="number" name="items[${rowIndex}][unit_price]" class="item-price item-input" min="0" step="0.01" value="0" required>
+        </div>
+
+        <div class="item-field">
+            <label class="item-label">Amount</label>
+            <input type="text" class="item-amount item-input" readonly value="0.00">
+        </div>
+
+        <div class="item-field">
+            <button type="button" class="remove-row item-btn-remove">
+                <i class="bi bi-trash"></i> Remove
+            </button>
+        </div>
     `;
-    document.getElementById('items-body').appendChild(tr);
-    if (typeof initInvSelectRow === 'function') initInvSelectRow(tr);
-    attachRowEvents(tr);
+    document.getElementById('items-body').appendChild(row);
+    attachRowEvents(row);
+
+    // Init SearchableSelect on the new div row
+    if (typeof initInvSelectRow === 'function') initInvSelectRow(row);
+
     rowIndex++;
 });
 

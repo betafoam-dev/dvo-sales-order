@@ -12,9 +12,9 @@ $offset = ($page - 1) * $limit;
 $where = "WHERE i.deleted_at IS NULL";
 $params = [];
 if ($search !== '') {
-    $where .= " AND (i.stock_code LIKE ? OR i.stock_name LIKE ? OR i.stock_description LIKE ?)";
+    $where .= " AND (i.stock_code LIKE ? OR i.stock_name LIKE ?)";
     $s = "%$search%";
-    $params = [$s, $s, $s];
+    $params = [$s, $s];
 }
 
 $total = $conn->prepare("SELECT COUNT(*) FROM inventories i $where");
@@ -41,6 +41,7 @@ $inventories = $stmt->fetchAll();
     <meta charset="UTF-8">
     <title>Inventory List</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
@@ -55,56 +56,54 @@ $inventories = $stmt->fetchAll();
     </style>
 </head>
 <body>
-<nav class="navbar navbar-dark bg-primary mb-4">
+<nav class="navbar navbar-dark bg-blue-600 mb-2">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
-        <span class="navbar-text text-white fw-semibold"><i class="bi bi-boxes me-1"></i>Inventory</span>
+        <a class="navbar-brand fw-bold md:block hidden" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
+        <span class="navbar-text text-white md:block hidden fw-semibold"><i class="bi bi-boxes me-1"></i>Inventory</span>
         <span class="ms-auto text-white-50 small"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
     </div>
 </nav>
 
-<div class="container-fluid px-4">
+<div class="container-fluid px-2">
 
-    <div class="d-flex align-items-center justify-content-between mb-3">
+    <div class="d-flex align-items-center justify-content-between md:mb-3 mb-1">
         <div>
-            <h4 class="fw-bold mb-0">Inventory List</h4>
-            <small class="text-muted"><?= number_format($totalRows) ?> total items</small>
+            <small class="text-muted"><b>Current Inventory:</b> <?= number_format($totalRows) ?> total items</small>
         </div>
     </div>
 
+    <div class="flex flex-row gap-2 text-[10px] mb-2 items-center">
+        <span><i class="bi bi-exclamation-triangle-fill text-danger"></i> Below minimum qty</span>
+        <span><span class="font-semibold text-red-600">Red qty</span> = at or below min &nbsp;
+              <span class="font-semibold text-green-600">Green qty</span> = above min</span>
+    </div>
+
     <div class="card shadow-sm border-0">
-        <div class="card-body">
+        <div class="p-2">
             <form class="row g-2 mb-3" method="GET">
                 <div class="col-md-4">
-                    <div class="input-group">
-                        <span class="input-group-text bg-white"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" name="search" class="form-control" placeholder="Search by code, name, description..." value="<?= htmlspecialchars($search) ?>">
-                        <button class="btn btn-primary">Search</button>
-                        <?php if ($search): ?><a href="inventories.php" class="btn btn-outline-secondary">Clear</a><?php endif; ?>
+                    <div class="flex items-center border border-gray-300 rounded overflow-hidden w-full max-w-md">
+                        <span class="px-1 md:text-xs text-[10px] md:text-base md:px-3 text-gray-400 bg-white"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="flex-1 border py-0.5 px-1 md:py-1.5 md:px-2 text-[10px] md:text-sm outline-none" placeholder="Search by code, name..." value="<?= htmlspecialchars($search) ?>">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] md:text-sm px-2 md:px-4 py-1.5">Search</button>
+                        <?php if ($search): ?><a href="inventories.php" class="text-[10px] text-black md:text-sm px-2 md:px-4 py-1.5 border-2">Clear</a><?php endif; ?>
                     </div>
                 </div>
             </form>
 
-            <div class="table-responsive">
-                <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light">
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-max text-sm text-left">
+                    <thead class="bg-gray-50 border-y border-gray-200">
                         <tr>
-                            <th>#</th>
-                            <th>Stock Code</th>
-                            <th>Stock Name</th>
-                            <th>Description</th>
-                            <th>UOM</th>
-                            <th>Category</th>
-                            <th class="text-center">Qty on Hand</th>
-                            <th class="text-center">Min Qty</th>
-                            <th class="text-center">Max Qty</th>
-                            <th class="text-center">Stocking</th>
-                            <th class="text-center">Active</th>
+                            <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">#</th>
+                            <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Stock Code</th>
+                            <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Stock Name</th>
+                            <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] text-center md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Qty on Hand</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if (empty($inventories)): ?>
-                            <tr><td colspan="11" class="text-center text-muted py-4">No inventory records found.</td></tr>
+                            <tr><td colspan="4" class="text-center text-muted py-4">No inventory records found.</td></tr>
                         <?php else: ?>
                             <?php foreach ($inventories as $idx => $inv): ?>
                             <?php
@@ -115,14 +114,11 @@ $inventories = $stmt->fetchAll();
                                     $qtyClass = ($minQty !== null && $qty <= $minQty) ? 'qty-low' : 'qty-ok';
                                 }
                             ?>
-                            <tr>
-                                <td class="text-muted small"><?= $offset + $idx + 1 ?></td>
-                                <td><span class="fw-semibold text-primary"><?= htmlspecialchars($inv['stock_code']) ?></span></td>
-                                <td><?= htmlspecialchars($inv['stock_name']) ?></td>
-                                <td class="text-muted small"><?= htmlspecialchars($inv['stock_description'] ?? '—') ?></td>
-                                <td><span class="badge bg-light text-dark border"><?= htmlspecialchars($inv['uom'] ?? '—') ?></span></td>
-                                <td><?= htmlspecialchars($inv['category_name'] ?? '—') ?></td>
-                                <td class="text-center qty-cell <?= $qtyClass ?>">
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-400 md:text-xs text-[5px] whitespace-nowrap"><?= $offset + $idx + 1 ?></td>
+                                <td class="md:px-3 px-1 text-[8px] md:text-base py-0.5 md:py-2.5 whitespace-nowrap"><span class="fw-semibold text-primary"><?= htmlspecialchars($inv['stock_code']) ?></span></td>
+                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($inv['stock_name']) ?></td>
+                                <td class="text-center text-[8px] md:text-base whitespace-nowrap qty-cell <?= $qtyClass ?>">
                                     <?php if ($qty !== null): ?>
                                         <?= number_format($qty, 2) ?>
                                         <?php if ($minQty !== null && $qty <= $minQty): ?>
@@ -132,66 +128,37 @@ $inventories = $stmt->fetchAll();
                                         <span class="text-muted">—</span>
                                     <?php endif; ?>
                                 </td>
-                                <td class="text-center text-muted small"><?= $inv['min_qty'] !== null ? number_format($inv['min_qty'], 2) : '—' ?></td>
-                                <td class="text-center text-muted small"><?= $inv['max_qty'] !== null ? number_format($inv['max_qty'], 2) : '—' ?></td>
-                                <td class="text-center">
-                                    <?php if ($inv['is_stocking'] === null): ?>
-                                        <span class="text-muted">—</span>
-                                    <?php elseif ($inv['is_stocking']): ?>
-                                        <span class="badge bg-success stock-badge">Yes</span>
-                                    <?php else: ?>
-                                        <span class="badge bg-secondary stock-badge">No</span>
-                                    <?php endif; ?>
-                                </td>
-                                <td class="text-center">
-                                    <?php if ($inv['is_active'] === null): ?>
-                                        <span class="text-muted">—</span>
-                                    <?php elseif ($inv['is_active']): ?>
-                                        <i class="bi bi-check-circle-fill text-success fs-5"></i>
-                                    <?php else: ?>
-                                        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
-                                    <?php endif; ?>
-                                </td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-
-            <?php if ($totalPages > 1): ?>
-            <nav class="mt-3">
-                <ul class="pagination pagination-sm mb-0">
-                    <li class="page-item <?= $page === 1 ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">‹</a>
-                    </li>
-                    <?php
-                    $start = max(1, $page - 2);
-                    $end = min($totalPages, $page + 2);
-                    if ($start > 1): ?><li class="page-item disabled"><span class="page-link">…</span></li><?php endif;
-                    for ($p = $start; $p <= $end; $p++): ?>
-                    <li class="page-item <?= $p === $page ? 'active' : '' ?>">
-                        <a class="page-link" href="?page=<?= $p ?>&search=<?= urlencode($search) ?>"><?= $p ?></a>
-                    </li>
-                    <?php endfor;
-                    if ($end < $totalPages): ?><li class="page-item disabled"><span class="page-link">…</span></li><?php endif; ?>
-                    <li class="page-item <?= $page === $totalPages ? 'disabled' : '' ?>">
-                        <a class="page-link" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">›</a>
-                    </li>
-                </ul>
-            </nav>
-            <?php endif; ?>
         </div>
     </div>
 
-    <!-- Legend -->
-    <div class="d-flex gap-3 mt-2 text-muted small">
-        <span><i class="bi bi-check-circle-fill text-success"></i> Active &nbsp;
-              <i class="bi bi-x-circle-fill text-danger"></i> Inactive</span>
-        <span><i class="bi bi-exclamation-triangle-fill text-danger"></i> Below minimum qty</span>
-        <span><span class="qty-low fw-semibold">Red qty</span> = at or below min &nbsp;
-              <span class="qty-ok fw-semibold">Green qty</span> = above min</span>
-    </div>
+    <?php if ($totalPages > 1): ?>
+        <nav class="mt-2">
+            <ul class="flex gap-1 mb-0">
+                <li class="<?= $page === 1 ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-blue-400 <?= $page === 1 ? 'pointer-events-none' : '' ?>" href="?page=<?= $page - 1 ?>&search=<?= urlencode($search) ?>">‹</a>
+                </li>
+                <?php
+                $start = max(1, $page - 2);
+                $end = min($totalPages, $page + 2);
+                if ($start > 1): ?><li class="opacity-50 bg-gray-200 cursor-not-allowed"><span class="px-2 py-1 border border-gray-300 rounded">…</span></li><?php endif;
+                for ($p = $start; $p <= $end; $p++): ?>
+                <li class="">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-blue-400 <?= $p === $page ? 'bg-blue-600 text-white' : '' ?>" href="?page=<?= $p ?>&search=<?= urlencode($search) ?>"><?= $p ?></a>
+                </li>
+                <?php endfor;
+                if ($end < $totalPages): ?><li class="opacity-50 cursor-not-allowed"><span class="px-2 py-1 border border-gray-300 rounded">…</span></li><?php endif; ?>
+                <li class="<?= $page === $totalPages ? 'opacity-50 cursor-not-allowed' : '' ?>">
+                    <a class="px-2 py-1 border border-gray-300 rounded hover:bg-gray-100 <?= $page === $totalPages ? 'pointer-events-none' : '' ?>" href="?page=<?= $page + 1 ?>&search=<?= urlencode($search) ?>">›</a>
+                </li>
+            </ul>
+        </nav>
+    <?php endif; ?>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
