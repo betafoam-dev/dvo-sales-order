@@ -1,181 +1,216 @@
-class SearchableSelect {
-    constructor(select, options = {}) {
-        this.originalSelect = select;
-        this.options = { placeholder: 'Search...', ...options };
-        this._build();
-        this._bind();
+<!-- BoomBox.vue - complete rewrite of the slow parts -->
+<script setup>
+import { ref, computed, watch, nextTick } from 'vue'
+import { Check, ChevronsUpDown, X } from 'lucide-vue-next'
+
+const props = defineProps({
+    items:                { type: Array, required: true },
+    existingValue:        { type: [Number, String, Object, Array], default: null },
+    labelField:           { type: String, default: 'name' },
+    descriptionField:     { type: String, default: null },
+    secondDescriptionField: { type: String, default: null },
+    nameDescriptionField: { type: String, default: null },
+    searchFields:         { type: Array, default: () => ['name'] },
+    placeholder:          { type: String, default: '- ' },
+    multiple:             { type: Boolean, default: false },
+    readonly:             { type: Boolean, default: false },
+    disabled:             { type: Boolean, default: false },
+})
+
+const emit = defineEmits(['change'])
+
+const open         = ref(false)
+const searchValue  = ref('')
+const selectedItem = ref(null)
+const selectedItems = ref([])
+const searchInput  = ref(null)
+
+// Restore existing value
+watch(() => props.existingValue, (newValue) => {
+    if (props.multiple) {
+        if (newValue && Array.isArray(newValue)) {
+            selectedItems.value = newValue
+                .map(v => props.items.find(i => i.id === v || i.id === Number(v) || i[props.labelField] === v))
+                .filter(Boolean)
+        } else {
+            selectedItems.value = []
+        }
+    } else {
+        selectedItem.value = newValue
+            ? props.items.find(i => i.id === newValue || i.id === Number(newValue) || i[props.labelField] === newValue) ?? null
+            : null
     }
+}, { immediate: true })
 
-    _build() {
-        const sel = this.originalSelect;
-
-        // Wrapper
-        this.wrapper = document.createElement('div');
-        this.wrapper.className = 'sd-wrapper';
-
-        // Copy width/classes from original
-        this.wrapper.style.cssText = sel.style.cssText;
-
-        // Display input
-        this.display = document.createElement('input');
-        this.display.type = 'text';
-        this.display.className = 'sd-input';
-        this.display.readOnly = true;
-        this.display.placeholder = sel.options[0]?.text || this.options.placeholder;
-
-        // Hidden input (replaces the select for form submission)
-        this.hidden = document.createElement('input');
-        this.hidden.type = 'hidden';
-        this.hidden.name = sel.name;
-        this.hidden.id = sel.id || '';
-        if (sel.required) this.hidden.required = true;
-
-        // Copy all data-* attributes
-        [...sel.attributes].forEach(attr => {
-            if (attr.name.startsWith('data-') || attr.name === 'class') return;
-            try { this.hidden.setAttribute(attr.name, attr.value); } catch {}
-        });
-
-        // Dropdown
-        this.dropdown = document.createElement('div');
-        this.dropdown.className = 'sd-dropdown';
-
-        this.searchInput = document.createElement('input');
-        this.searchInput.type = 'text';
-        this.searchInput.className = 'sd-search';
-        this.searchInput.placeholder = this.options.placeholder;
-
-        this.list = document.createElement('div');
-        this.list.className = 'sd-list';
-
-        // Build items from original select options
-        this._items = [];
-        [...sel.options].forEach(opt => {
-            if (!opt.value) return;
-            const item = document.createElement('div');
-            item.className = 'sd-item';
-            item.dataset.value = opt.value;
-
-            // Copy all data-* from option
-            [...opt.attributes].forEach(attr => {
-                if (attr.name.startsWith('data-')) item.setAttribute(attr.name, attr.value);
-            });
-
-            item.textContent = opt.text;
-            this.list.appendChild(item);
-            this._items.push(item);
-
-            if (opt.selected && opt.value) {
-                this.display.value = opt.text;
-                this.hidden.value = opt.value;
-            }
-        });
-
-        this.dropdown.appendChild(this.searchInput);
-        this.dropdown.appendChild(this.list);
-        this.wrapper.appendChild(this.display);
-        this.wrapper.appendChild(this.hidden);
-        this.wrapper.appendChild(this.dropdown);
-
-        sel.parentNode.replaceChild(this.wrapper, sel);
+// Also re-match when items list changes (lazy load case)
+watch(() => props.items, () => {
+    if (!props.multiple && props.existingValue && !selectedItem.value) {
+        selectedItem.value = props.items.find(i =>
+            i.id === props.existingValue ||
+            i.id === Number(props.existingValue) ||
+            i[props.labelField] === props.existingValue
+        ) ?? null
     }
+})
 
-    _bind() {
-        const { wrapper, display, hidden, dropdown, searchInput, list } = this;
+const filteredItems = computed(() => {
+    const q = searchValue.value.trim().toLowerCase()
+    return props.items.filter(item => {
+        if (props.multiple && selectedItems.value.some(s => s.id === item.id)) return false
+        if (!q) return true
+        return props.searchFields.some(field => {
+            const val = item[field]
+            return val != null && String(val).toLowerCase().includes(q)
+        })
+    })
+})
 
-        const filter = q => {
-            const lower = q.toLowerCase();
-            let vis = 0;
-            this._items.forEach(item => {
-                const show = !q || item.textContent.toLowerCase().includes(lower);
-                item.style.display = show ? '' : 'none';
-                if (show) vis++;
-            });
-            let empty = list.querySelector('.sd-empty');
-            if (vis === 0) {
-                if (!empty) { empty = document.createElement('div'); empty.className = 'sd-empty'; empty.textContent = 'No results'; list.appendChild(empty); }
-                empty.style.display = '';
-            } else if (empty) empty.style.display = 'none';
-        };
-
-        const open = () => {
-            document.querySelectorAll('.sd-dropdown').forEach(d => { if (d !== dropdown) d.style.display = 'none'; });
-            
-            // Use fixed positioning based on display input's position
-            const rect = display.getBoundingClientRect();
-            dropdown.style.position = 'fixed';
-            dropdown.style.top  = (rect.bottom + 2) + 'px';
-            dropdown.style.left = rect.left + 'px';
-            dropdown.style.width = rect.width + 'px';
-            dropdown.style.right = 'auto';
-
-            dropdown.style.display = 'block';
-            searchInput.value = '';
-            filter('');
-            searchInput.focus();
-        };
-
-        const close = () => { dropdown.style.display = 'none'; };
-
-        const clear = () => {
-            display.value = '';
-            hidden.value = '';
-            close();
-            this._emit(null);
-        };
-
-        display.addEventListener('click', () => dropdown.style.display === 'block' ? close() : open());
-
-        display.addEventListener('keydown', e => {
-            if (e.key === 'Escape') { close(); return; }
-            if (e.key === 'Backspace' || e.key === 'Delete') { clear(); return; }
-            if (e.key.length === 1) { open(); searchInput.value += e.key; filter(searchInput.value); }
-        });
-
-        searchInput.addEventListener('input', () => filter(searchInput.value));
-
-        list.addEventListener('mousedown', e => {
-            const item = e.target.closest('.sd-item');
-            if (!item || item.style.display === 'none') return;
-            e.preventDefault();
-            display.value = item.textContent.trim();
-            hidden.value = item.dataset.value;
-            close();
-            this._emit(item);
-        });
-
-        document.addEventListener('click', e => { if (!wrapper.contains(e.target)) close(); });
+const displayText = computed(() => {
+    if (props.multiple) {
+        if (!selectedItems.value.length) return props.placeholder
+        return selectedItems.value.length === 1
+            ? selectedItems.value[0][props.labelField]
+            : `${selectedItems.value.length} selected`
     }
+    return selectedItem.value ? selectedItem.value[props.labelField] : props.placeholder
+})
 
-    _emit(item) {
-        this.wrapper.dispatchEvent(new CustomEvent('ss:change', {
-            bubbles: true,
-            detail: item ? { value: item.dataset.value, text: item.textContent.trim(), element: item, data: { ...item.dataset } } : null
-        }));
-    }
+const openDropdown = async () => {
+    if (props.readonly || props.disabled) return
+    open.value = true
+    searchValue.value = ''
+    await nextTick()
+    searchInput.value?.focus()
+}
 
-    getValue() { return this.hidden.value; }
-    getText()  { return this.display.value; }
+const closeDropdown = () => {
+    open.value = false
+    searchValue.value = ''
+}
 
-    setValue(value) {
-        const item = this._items.find(i => i.dataset.value === value);
-        if (item) { this.display.value = item.textContent.trim(); this.hidden.value = value; }
-        else { this.display.value = this.hidden.value = ''; }
-    }
-
-    // Dynamically replace list items (e.g. after AJAX)
-    setItems(items) {
-        // items: [{ value, text, data: {} }]
-        this._items = [];
-        this.list.querySelectorAll('.sd-item, .sd-empty').forEach(el => el.remove());
-        items.forEach(({ value, text, data = {} }) => {
-            const item = document.createElement('div');
-            item.className = 'sd-item';
-            item.dataset.value = value;
-            Object.entries(data).forEach(([k, v]) => item.dataset[k] = v);
-            item.textContent = text;
-            this.list.appendChild(item);
-            this._items.push(item);
-        });
+const selectItem = (item) => {
+    if (props.readonly || props.disabled) return
+    if (props.multiple) {
+        const idx = selectedItems.value.findIndex(s => s.id === item.id)
+        if (idx > -1) selectedItems.value.splice(idx, 1)
+        else selectedItems.value.push(item)
+        emit('change', selectedItems.value)
+    } else {
+        selectedItem.value = item
+        emit('change', item)
+        closeDropdown()
     }
 }
+
+const clearSingle = () => {
+    selectedItem.value = null
+    emit('change', null)
+}
+
+const removeItem = (itemToRemove) => {
+    selectedItems.value = selectedItems.value.filter(i => i.id !== itemToRemove.id)
+    emit('change', selectedItems.value)
+}
+
+const onClickOutside = (e) => {
+    if (!e.target.closest('.boombox-wrapper')) closeDropdown()
+}
+</script>
+
+<template>
+    <div class="boombox-wrapper relative w-full" v-click-outside="closeDropdown">
+
+        <!-- Trigger Button -->
+        <button
+            type="button"
+            @click="open ? closeDropdown() : openDropdown()"
+            :disabled="disabled"
+            class="flex items-center justify-between w-full px-3 py-2 text-sm bg-white border border-black rounded hover:bg-gray-50 focus:outline-none"
+            :class="{
+                'opacity-60 cursor-not-allowed bg-gray-50': readonly || disabled,
+            }"
+        >
+            <!-- Single mode display -->
+            <template v-if="!multiple">
+                <span class="truncate" :class="selectedItem ? 'text-black' : 'text-gray-400 italic'">
+                    {{ displayText }}
+                </span>
+                <span class="flex items-center gap-1 shrink-0">
+                    <X
+                        v-if="selectedItem && !readonly && !disabled"
+                        class="w-3 h-3 text-gray-400 hover:text-red-500"
+                        @click.stop="clearSingle"
+                    />
+                    <ChevronsUpDown class="w-4 h-4 opacity-50" />
+                </span>
+            </template>
+
+            <!-- Multiple mode display -->
+            <template v-else>
+                <div class="flex flex-wrap gap-1 overflow-hidden">
+                    <template v-if="selectedItems.length">
+                        <span
+                            v-for="item in selectedItems.slice(0, 5)"
+                            :key="item.id"
+                            class="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-gray-100 rounded"
+                        >
+                            {{ item[labelField] }}
+                            <X class="w-3 h-3 cursor-pointer hover:text-red-500" @click.stop="removeItem(item)" />
+                        </span>
+                        <span v-if="selectedItems.length > 5" class="text-xs text-gray-500">
+                            +{{ selectedItems.length - 5 }} more
+                        </span>
+                    </template>
+                    <span v-else class="text-gray-400 italic text-sm">{{ placeholder }}</span>
+                </div>
+                <ChevronsUpDown class="w-4 h-4 opacity-50 shrink-0 ml-2" />
+            </template>
+        </button>
+
+        <!-- Dropdown -->
+        <div
+            v-if="open && !readonly && !disabled"
+            class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg"
+        >
+            <!-- Search input -->
+            <div class="p-2 border-b border-gray-100">
+                <input
+                    ref="searchInput"
+                    v-model="searchValue"
+                    type="text"
+                    placeholder="Search..."
+                    class="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+                    @keydown.escape="closeDropdown"
+                />
+            </div>
+
+            <!-- List -->
+            <ul class="max-h-60 overflow-y-auto">
+                <li v-if="!filteredItems.length" class="px-3 py-2 text-sm text-gray-400 italic">
+                    No results found.
+                </li>
+                <li
+                    v-for="item in filteredItems"
+                    :key="item.id"
+                    @mousedown.prevent="selectItem(item)"
+                    class="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-blue-50"
+                    :class="{ 'bg-blue-50 font-medium': multiple && selectedItems.some(s => s.id === item.id) }"
+                >
+                    <Check
+                        v-if="multiple && selectedItems.some(s => s.id === item.id)"
+                        class="w-4 h-4 text-blue-500 shrink-0"
+                    />
+                    <div class="flex flex-col">
+                        <span>{{ item[labelField] }}</span>
+                        <span v-if="nameDescriptionField && item[nameDescriptionField]" class="text-xs text-gray-400">
+                            {{ item[nameDescriptionField] }}
+                            <template v-if="descriptionField && item[descriptionField]">
+                                : {{ item[descriptionField] }}
+                            </template>
+                        </span>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</template>
