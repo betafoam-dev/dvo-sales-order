@@ -151,13 +151,13 @@ $orders = $stmt->fetchAll();
                                            class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1.5 py-0.5 md:px-2 md:text-xs text-[10px]">
                                             <i class="bi bi-eye"></i>
                                         </a>
-                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
+                                        <?php if (strtolower($o['status'] ?? '') === 'order draft'): ?>
                                             <a href="edit.php?id=<?= $o['id'] ?>" title="Edit"
                                             class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         <?php endif; ?>
-                                        <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
+                                        <?php if (strtolower($o['status'] ?? '') === 'order draft'): ?>
                                             <a href="?delete=<?= $o['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $page ?>"
                                             title="Delete"
                                             onclick="return confirm('Delete this sales order?')"
@@ -183,9 +183,9 @@ $orders = $stmt->fetchAll();
                                     $badgeClass = match(strtolower($status)) {
                                         'completed'      => 'bg-blue-100 text-blue-700',
                                         'cancelled'      => 'bg-red-100 text-red-700',
-                                        'for adjustment' => 'bg-yellow-100 text-yellow-700',
-                                        'for so' => 'bg-teal-100 text-teal-700',
-                                        'so generated' => 'bg-green-100 text-green-700',
+                                        'order draft' => 'bg-yellow-100 text-yellow-700',
+                                        'for approval' => 'bg-teal-100 text-teal-700',
+                                        'approved' => 'bg-green-100 text-green-700',
                                         'for delivery' => 'bg-sky-100 text-sky-700',
                                         default          => 'bg-gray-100 text-gray-600',
                                     };

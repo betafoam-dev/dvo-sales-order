@@ -43,7 +43,7 @@ $data = [
     'order_date' => date('Y-m-d') , 'address' => '', 'billing_address' => '', 'contact_details' => '',
     'payment_terms' => '', 'contact_person' => '', 'required_delivery_date' => '',
     'deliver_to' => '', 'is_new' => 0,
-    'remarks' => '', 'special_instruction' => '', 'status' => 'for adjustment', 'total_amount' => 0,
+    'remarks' => '', 'special_instruction' => '', 'status' => 'order draft', 'total_amount' => 0,
     'lot_no' => '', 'barangay' => '', 'municipality' => '', 'province' => '', 'region' => ''
 ];
 
@@ -442,7 +442,7 @@ if (empty($existingItems)) $existingItems = [[]];
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Status</label>
                         <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
-                            <?php foreach (['for adjustment','for so','cancelled'] as $s): ?>
+                            <?php foreach (['order draft','for approval','cancelled'] as $s): ?>
                                 <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                             <?php endforeach; ?>
                         </select>

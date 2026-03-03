@@ -70,7 +70,7 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
         </div>
         <div class="d-flex gap-2">
             <button onclick="window.print()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-printer me-1"></i>Print</button>
-            <?php if (strtolower($o['status'] ?? '') === 'for adjustment'): ?>
+            <?php if (strtolower($o['status'] ?? '') === 'order draft'): ?>
                 <a href="edit.php?id=<?= $id ?>" class="btn btn-warning btn-sm"><i class="bi bi-pencil me-1"></i>Edit</a>
             <?php endif; ?>
             <a href="index.php?delete=<?= $id ?>" class="btn btn-outline-danger btn-sm"

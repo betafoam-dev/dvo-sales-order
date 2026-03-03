@@ -431,7 +431,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Status</label>
                         <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 bg-white">
-                            <?php foreach (['for adjustment','for so','cancelled'] as $s): ?>
+                            <?php foreach (['order draft','for approval','cancelled'] as $s): ?>
                                 <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                             <?php endforeach; ?>
                         </select>
