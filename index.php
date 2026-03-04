@@ -77,6 +77,9 @@ $orders = $stmt->fetchAll();
             <a href="inventories.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden md:flex items-center gap-1">
                 <i class="bi bi-boxes"></i> Inventory
             </a>
+            <a href="customers.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden md:flex items-center gap-1">
+                <i class="bi bi-person-badge"></i> Customer
+            </a>
             <span class="text-blue-200 text-sm flex items-center gap-1">
                 <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['user_name']) ?>
             </span>
