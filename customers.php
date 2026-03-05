@@ -14,7 +14,7 @@ $params = [];
 if ($search !== '') {
     $where .= " AND (c.full_name LIKE ?)";
     $s = "%$search%";
-    $params = [$s, $s];
+    $params = [$s];
 }
 
 $total = $conn->prepare("SELECT COUNT(*) FROM customers c $where");
