@@ -86,10 +86,10 @@ $customers = $stmt->fetchAll();
                             <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">#</th>
                             <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Customer Name</th>
                             <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Address</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-center md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Sales Person</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-center md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">TIN</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-center md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Contact No</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-center md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Email</th>
+                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Sales Person</th>
+                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">TIN</th>
+                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Contact No</th>
+                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Email</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -101,10 +101,10 @@ $customers = $stmt->fetchAll();
                                 <td class=" px-1 py-0.5 md:py-2.5 text-gray-400 md:text-xs text-[5px] whitespace-nowrap"><?= $offset + $idx + 1 ?></td>
                                 <td class=" px-1 text-[8px] md:text-base py-0.5 md:py-2.5 whitespace-nowrap"><span class="fw-semibold text-primary"><?= htmlspecialchars($cus['full_name']) ?></span></td>
                                 <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['address'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['sales_person'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['tin_no'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['contact_no'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['email'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['sales_person'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['tin_no'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['contact_no'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['email'] ?? '') ?></td>
                                 
                             </tr>
                             <?php endforeach; ?>
