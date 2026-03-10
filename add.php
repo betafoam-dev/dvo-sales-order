@@ -439,14 +439,16 @@ if (empty($existingItems)) $existingItems = [[]];
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
 
-                    <div>
+                    <!-- <div>
                         <label class="block text-sm font-semibold text-gray-700">Status</label>
                         <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
                             <?php foreach (['order draft','for approval','cancelled'] as $s): ?>
                                 <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                             <?php endforeach; ?>
                         </select>
-                    </div>
+                    </div> -->
+
+                    <input type="hidden" name="status" value="order draft">
 
                 </div>
             </div>
@@ -538,9 +540,25 @@ if (empty($existingItems)) $existingItems = [[]];
         </div>
 
         <div class="flex flex-row justify-between w-full items-center gap-2 my-4">
-            <a href="index.php" class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Cancel</a>
-            <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded flex items-center gap-1">
-                <i class="bi bi-save"></i> Save Sales Order
+            <a href="index.php"
+            id="btn-cancel"
+            class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">
+                Cancel
+            </a>
+
+            <button type="submit"
+                    id="btn-save"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded flex items-center gap-1 transition-opacity">
+                <span id="btn-save-idle" class="flex items-center gap-1">
+                    <i class="bi bi-save"></i> Save Sales Order
+                </span>
+                <span id="btn-save-loading" class="hidden items-center gap-1">
+                    <svg class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                    </svg>
+                    Saving…
+                </span>
             </button>
         </div>
     </form>
@@ -598,6 +616,26 @@ addRowBtn.addEventListener('ss:init-row', e => {
         row.querySelector('.item-uom').value  = inv.uom;
     });
 });
+</script>
+<script>
+(function () {
+    const form      = document.getElementById('so-form');
+    const btnSave   = document.getElementById('btn-save');
+    const btnCancel = document.getElementById('btn-cancel');
+
+    form.addEventListener('submit', function () {
+        // Show spinner
+        document.getElementById('btn-save-idle').classList.add('hidden');
+        const loading = document.getElementById('btn-save-loading');
+        loading.classList.remove('hidden');
+        loading.classList.add('flex');
+
+        // Lock buttons
+        btnSave.disabled = true;
+        btnSave.classList.add('opacity-70', 'cursor-not-allowed');
+        btnCancel.classList.add('opacity-50', 'pointer-events-none');
+    });
+})();
 </script>
 </body>
 </html>

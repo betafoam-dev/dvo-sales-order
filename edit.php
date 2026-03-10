@@ -144,6 +144,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $savedItems = array_values($items);
 }
+
+// Current status for button state logic
+$currentStatus = $data['status'];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -158,7 +161,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         input[type=number]::-webkit-inner-spin-button { opacity: 1; }
         select, input, textarea { outline: none; }
 
-        /* ── Item rows: div card layout ── */
         #items-body {
             display: flex !important;
             flex-direction: column !important;
@@ -240,6 +242,68 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: #d97706;
             font-size: 0.875rem;
         }
+
+        /* Status buttons */
+        .status-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.4rem 0.85rem;
+            border-radius: 0.375rem;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: opacity 0.15s, box-shadow 0.15s;
+        }
+        .status-btn:not(:disabled):hover {
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        /* Active (current) status — disabled appearance */
+        .status-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.38;
+            box-shadow: none;
+        }
+        /* Draft — gray */
+        .status-btn-draft {
+            background-color: #f3f4f6;
+            color: #374151;
+            border-color: #d1d5db;
+        }
+        .status-btn-draft:not(:disabled):hover {
+            background-color: #e5e7eb;
+        }
+        /* For Approval — blue */
+        .status-btn-approval {
+            background-color: #2563eb;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+        .status-btn-approval:not(:disabled):hover {
+            background-color: #1d4ed8;
+        }
+        /* Cancelled — red */
+        .status-btn-cancelled {
+            background-color: #ef4444;
+            color: #fff;
+            border-color: #dc2626;
+        }
+        .status-btn-cancelled:not(:disabled):hover {
+            background-color: #dc2626;
+        }
+        /* Current status badge shown next to label */
+        .current-status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -256,7 +320,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </nav>
 
 <div class="max-w-full px-2">
-    <h4 class="text-xl font-bold text-gray-800 hidden md:block mb-4">Edit Order <span class="text-gray-400 font-normal">#<?= htmlspecialchars($data['id']) ?></span></h4>
+    <h4 class="text-xl font-bold text-gray-800 hidden md:block mb-4">
+        Edit Order <span class="text-gray-400 font-normal">#<?= htmlspecialchars($data['id']) ?></span>
+        <?php
+            $badgeClass = match($currentStatus) {
+                'for approval' => 'bg-blue-100 text-blue-700',
+                'cancelled'    => 'bg-red-100 text-red-600',
+                default        => 'bg-gray-200 text-gray-600',
+            };
+            $badgeIcon = match($currentStatus) {
+                'for approval' => 'bi-hourglass-split',
+                'cancelled'    => 'bi-x-circle',
+                default        => 'bi-pencil-square',
+            };
+        ?>
+        <span class="current-status-badge <?= $badgeClass ?>">
+            <i class="bi <?= $badgeIcon ?>"></i>
+            <?= htmlspecialchars(ucfirst($currentStatus)) ?>
+        </span>
+    </h4>
 
     <?php if (!empty($errors)): ?>
         <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded px-4 py-3 text-sm">
@@ -265,6 +347,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <?php endif; ?>
 
     <form method="POST" id="so-form">
+        <!-- Holds current status; overridden by status buttons when clicked -->
+        <input type="hidden" name="status" id="status-hidden" value="<?= htmlspecialchars($currentStatus) ?>">
+
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
@@ -428,20 +513,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">Status</label>
-                        <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 bg-white">
-                            <?php foreach (['order draft','for approval','cancelled'] as $s): ?>
-                                <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
-                            <?php endforeach; ?>
-                        </select>
-                    </div>
-
                 </div>
             </div>
         </div>
 
-        <!-- ── Order Items: div card layout ── -->
+        <!-- Order Items -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-3">
                 <div class="flex items-center justify-between mb-3">
@@ -527,12 +603,99 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
         </div>
+        <!-- Bottom action bar — single block, responsive -->
+        <div class="flex flex-col sm:flex-row sm:justify-between w-full gap-3 my-4">
 
-        <div class="flex flex-row justify-between w-full items-center gap-2 my-4">
-            <a href="view.php?id=<?= $id ?>" class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">Cancel</a>
-            <button type="submit" class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 text-sm font-semibold px-4 py-2 rounded flex items-center gap-1">
-                <i class="bi bi-save"></i> Update Sales Order
-            </button>
+            <!-- Left: Cancel -->
+            <a href="view.php?id=<?= $id ?>"
+            id="btn-cancel"
+            class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded text-center">
+                Cancel
+            </a>
+
+            <!-- Right: status buttons + update -->
+            <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
+
+                <!-- Status: Order Draft -->
+                <button type="button"
+                        class="status-btn status-btn-draft"
+                        data-status="order draft"
+                        <?= $currentStatus === 'order draft' ? 'disabled title="Current status"' : '' ?>>
+                    <span class="btn-idle flex items-center justify-center gap-1">
+                        <i class="bi bi-pencil-square"></i> Order Draft
+                        <?php if ($currentStatus === 'order draft'): ?>
+                            <i class="bi bi-check2 ml-0.5"></i>
+                        <?php endif; ?>
+                    </span>
+                    <span class="btn-loading hidden items-center justify-center gap-1">
+                        <svg class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Saving…
+                    </span>
+                </button>
+
+                <!-- Status: For Approval -->
+                <button type="button"
+                        class="status-btn status-btn-approval"
+                        data-status="for approval"
+                        <?= $currentStatus === 'for approval' ? 'disabled title="Current status"' : '' ?>>
+                    <span class="btn-idle flex items-center justify-center gap-1">
+                        <i class="bi bi-hourglass-split"></i> For Approval
+                        <?php if ($currentStatus === 'for approval'): ?>
+                            <i class="bi bi-check2 ml-0.5"></i>
+                        <?php endif; ?>
+                    </span>
+                    <span class="btn-loading hidden items-center justify-center gap-1">
+                        <svg class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Saving…
+                    </span>
+                </button>
+
+                <!-- Status: Cancelled -->
+                <button type="button"
+                        class="status-btn status-btn-cancelled"
+                        data-status="cancelled"
+                        <?= $currentStatus === 'cancelled' ? 'disabled title="Current status"' : '' ?>>
+                    <span class="btn-idle flex items-center justify-center gap-1">
+                        <i class="bi bi-x-circle"></i> Cancelled
+                        <?php if ($currentStatus === 'cancelled'): ?>
+                            <i class="bi bi-check2 ml-0.5"></i>
+                        <?php endif; ?>
+                    </span>
+                    <span class="btn-loading hidden items-center justify-center gap-1">
+                        <svg class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Saving…
+                    </span>
+                </button>
+
+                <!-- Divider (desktop only) -->
+                <span class="hidden sm:inline text-gray-300 text-lg font-thin">|</span>
+
+                <!-- Update Sales Order -->
+                <button type="submit"
+                        id="btn-update"
+                        class="bg-yellow-400 hover:bg-yellow-500 text-gray-800 text-sm font-semibold px-4 py-2 rounded flex items-center justify-center gap-1 transition-opacity">
+                    <span id="btn-update-idle" class="flex items-center gap-1">
+                        <i class="bi bi-save"></i> Update Sales Order
+                    </span>
+                    <span id="btn-update-loading" class="hidden items-center gap-1">
+                        <svg class="animate-spin w-4 h-4 text-gray-800" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
+                        </svg>
+                        Saving…
+                    </span>
+                </button>
+
+            </div>
         </div>
     </form>
 </div>
@@ -554,6 +717,50 @@ window.appConfig = {
 <script src="js/edit.js"></script>
 <script src="js/searchable-select.js"></script>
 <script>
+(function () {
+    const form         = document.getElementById('so-form');
+    const statusHidden = document.getElementById('status-hidden');
+    const btnCancel    = document.getElementById('btn-cancel');
+    const btnUpdate    = document.getElementById('btn-update');
+    let   submitting   = false;  // flag — prevents double-fire
+
+    function showSpinner(btn) {
+        const idle    = btn.querySelector('.btn-idle, #btn-update-idle');
+        const loading = btn.querySelector('.btn-loading, #btn-update-loading');
+        if (idle)    idle.classList.add('hidden');
+        if (loading) { loading.classList.remove('hidden'); loading.classList.add('flex'); }
+    }
+
+    function lockAll() {
+        btnCancel.classList.add('opacity-50', 'pointer-events-none');
+        document.querySelectorAll('.status-btn, #btn-update').forEach(b => {
+            b.disabled = true;
+            b.classList.add('opacity-70', 'cursor-not-allowed');
+        });
+    }
+
+    // Status buttons
+    document.querySelectorAll('.status-btn:not([disabled])').forEach(btn => {
+        btn.addEventListener('click', function () {
+            if (submitting) return;
+            submitting = true;
+            statusHidden.value = this.dataset.status;
+            showSpinner(this);
+            lockAll();
+            form.submit();
+        });
+    });
+
+    // Update button (native form submit)
+    form.addEventListener('submit', function (e) {
+        if (submitting) { e.preventDefault(); return; }
+        submitting = true;
+        showSpinner(btnUpdate);
+        lockAll();
+    });
+})();
+</script>
+<script>
 function initInvSelectRow(row) {
     const sel = row.querySelector('.inv-select');
     if (!sel || sel.dataset.ssInit) return;
@@ -569,13 +776,11 @@ function initInvSelectRow(row) {
     });
 }
 
-// Customer
 const customerSS = new SearchableSelect(document.getElementById('customer-select'), { placeholder: 'Search customer...' });
 customerSS.wrapper.addEventListener('ss:change', e => {
     document.getElementById('billing-address-field').value = e.detail?.data?.address || '';
 });
 
-// Existing rows — use .item-row since they are now divs
 document.querySelectorAll('.inv-select').forEach(sel => {
     initInvSelectRow(sel.closest('.item-row'));
 });
