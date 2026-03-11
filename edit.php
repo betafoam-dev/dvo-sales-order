@@ -156,6 +156,7 @@ $currentStatus = $data['status'];
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="styles/loader.css">
     <link rel="stylesheet" href="styles/edit-style.css">
     <style>
         input[type=number]::-webkit-inner-spin-button { opacity: 1; }
@@ -794,5 +795,6 @@ window.appConfig = {
     });
 })();
 </script>
+<script src="js/loader.js"></script>
 </body>
 </html>

@@ -63,6 +63,7 @@ $orders = $stmt->fetchAll();
     <title>Sales Orders</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles/loader.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -83,7 +84,7 @@ $orders = $stmt->fetchAll();
             <span class="text-blue-200 text-sm flex items-center gap-1">
                 <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['user_name']) ?>
             </span>
-            <a href="?logout" class="border border-white text-white md:text-xs text-[10px] md:text-sm px-2 py-0.5 md:px-3 md:py-1.5 rounded hover:bg-blue-700">
+            <a href="?logout" class="border border-white text-white md:text-base text-sm md:text-sm px-2 py-0.5 md:px-3 md:py-1.5 rounded hover:bg-blue-700">
                 <i class="bi bi-box-arrow-in-right"></i> 
                 &nbsp;&nbsp;Logout
             </a>
@@ -109,7 +110,7 @@ $orders = $stmt->fetchAll();
         <!-- Card Header -->
         <div class="flex items-center justify-between px-2 md:px-5 py-2 md:py-4 border-b-none md:border-b border-gray-100">
             <h5 class="text-base hidden md:block font-bold text-gray-800">Sales Order List</h5>
-            <a href="add.php" class="bg-blue-600 hover:bg-blue-700 text-white text-[11px] md:text-sm font-medium md:px-3 px-2 py-1 md:py-1.5 rounded flex items-center gap-1">
+            <a href="add.php" class="bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-medium md:px-3 px-2 py-1 md:py-1.5 rounded flex items-center gap-1">
                 <i class="bi bi-plus-lg"></i> Create
             </a>
         </div>
@@ -151,12 +152,12 @@ $orders = $stmt->fetchAll();
                                 <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-[11px] md:text-base whitespace-nowrap">
                                     <div class="flex items-center gap-1">
                                         <a href="view.php?id=<?= $o['id'] ?>" title="View"
-                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1.5 py-0.5 md:px-2 md:text-xs text-[10px]">
+                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1 py-0.5 md:px-2 md:text-sm text-base">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         <?php if (strtolower($o['status'] ?? '') === 'order draft'): ?>
                                             <a href="edit.php?id=<?= $o['id'] ?>" title="Edit"
-                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
+                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1 md:px-2 py-0.5 md:text-sm text-base">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         <?php endif; ?>
@@ -164,7 +165,7 @@ $orders = $stmt->fetchAll();
                                             <a href="?delete=<?= $o['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $page ?>"
                                             title="Delete"
                                             onclick="return confirm('Delete this sales order?')"
-                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1.5 md:px-2 py-0.5 md:text-xs text-[10px]">
+                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1 md:px-2 py-0.5 md:text-sm text-base">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         <?php endif; ?>
@@ -223,6 +224,6 @@ $orders = $stmt->fetchAll();
 
     <p class="text-gray-400 md:text-xs text-[10px] mt-2">Showing <?= count($orders) ?> of <?= $totalRows ?> records.</p>
 </div>
-
+<script src="js/loader.js"></script>
 </body>
 </html>
