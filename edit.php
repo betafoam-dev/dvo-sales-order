@@ -372,14 +372,14 @@ $currentStatus = $data['status'];
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 xl:grid-cols-2 xl:grid-cols-4 gap-2">
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
                         <input type="date" name="order_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars(substr($data['order_date'],0,10)) ?>" required>
                     </div>
 
-                    <div class="sm:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
                         <div class="sd-wrapper" id="customer-wrapper">
                             <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
@@ -408,7 +408,7 @@ $currentStatus = $data['status'];
                         </label>
                     </div>
 
-                    <div class="sm:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Billing Address</label>
                         <input type="text" name="billing_address" id="billing-address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
                     </div>
@@ -418,7 +418,7 @@ $currentStatus = $data['status'];
                         <input type="text" name="tin_no" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['tin_no']) ?>">
                     </div>
 
-                    <div class="sm:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Complete Address</label>
                         <input type="text" name="address" id="address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['address']) ?>" readonly>
                     </div>
@@ -640,7 +640,7 @@ $currentStatus = $data['status'];
             </div>
         </div>
         <!-- Bottom action bar — single block, responsive -->
-        <div class="flex flex-col sm:flex-row sm:justify-between w-full gap-3 my-4">
+        <div class="flex flex-col xl:flex-row xl:justify-between w-full gap-3 my-4">
 
             <!-- Left: Cancel -->
             <a href="view.php?id=<?= $id ?>"
@@ -650,7 +650,7 @@ $currentStatus = $data['status'];
             </a>
 
             <!-- Right: status buttons + update -->
-            <div class="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2">
+            <div class="flex flex-col xl:flex-row flex-wrap items-stretch xl:items-center gap-2">
 
                 <!-- Status: Order Draft -->
                 <button type="button"
@@ -713,7 +713,7 @@ $currentStatus = $data['status'];
                 </button>
 
                 <!-- Divider (desktop only) -->
-                <span class="hidden sm:inline text-gray-300 text-lg font-thin">|</span>
+                <span class="hidden xl:inline text-gray-300 text-lg font-thin">|</span>
 
                 <!-- Update Sales Order -->
                 <button type="submit"

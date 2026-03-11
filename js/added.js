@@ -129,7 +129,9 @@ function syncAddress() {
         document.getElementById('province-value').value.trim(),
         document.getElementById('region-value').value.trim(),
     ].filter(Boolean);
-    document.getElementById('address-field').value = parts.join(', ');
+    const joined = parts.join(', ');
+    document.getElementById('address-text-display').value = joined;
+    document.getElementById('address-field').value = joined;
 }
 
 document.getElementById('lot-no-field').addEventListener('input', syncAddress);
@@ -315,4 +317,90 @@ recalcTotal();
 initSD('customer-wrapper', item => {
     document.getElementById('customer-name-value').value = item ? item.dataset.value : '';
     document.getElementById('billing-address-field').value = item ? (item.dataset.address ?? '') : '';
+
+    const select = document.getElementById('address-select');
+    select.innerHTML = '<option value="">-- Loading... --</option>';
+    document.getElementById('address-field').value = '';
+
+    if (!item) {
+        select.innerHTML = '<option value="">-- Select customer first --</option>';
+        return;
+    }
+
+    fetch(`add.php?ajax=customer_addresses&customer_name=${encodeURIComponent(item.dataset.value)}`)
+        .then(r => r.json())
+        .then(addresses => {
+            if (!addresses.length) {
+                select.innerHTML = '<option value="">-- No existing addresses --</option>';
+            } else {
+                select.innerHTML = '<option value="">-- Select address --</option>' +
+                    addresses.map(a =>
+                        `<option
+                        value="${a.address.replace(/"/g, '&quot;')}"
+                        data-lot="${(a.lot_no ?? '').replace(/"/g, '&quot;')}"
+                        data-barangay="${(a.barangay ?? '').replace(/"/g, '&quot;')}"
+                        data-municipality="${(a.municipality ?? '').replace(/"/g, '&quot;')}"
+                        data-province="${(a.province ?? '').replace(/"/g, '&quot;')}"
+                        data-region="${(a.region ?? '').replace(/"/g, '&quot;')}">
+                        ${a.address}
+                    </option>`
+                    ).join('');
+            }
+        });
+});
+
+// When user picks from address select
+document.getElementById('address-select').addEventListener('change', function () {
+    document.getElementById('address-field').value = this.value;
+
+    const opt = this.options[this.selectedIndex];
+    if (!this.value || !opt) return;
+
+    // Silently fill hidden sub-fields so they save to DB correctly
+    document.getElementById('lot-no-field').value = opt.dataset.lot ?? '';
+    document.getElementById('province-value').value = opt.dataset.province ?? '';
+    document.getElementById('province-display').value = opt.dataset.province ?? '';
+    document.getElementById('region-value').value = opt.dataset.region ?? '';
+    document.getElementById('region-display').value = opt.dataset.region ?? '';
+
+    // Municipality
+    document.getElementById('municipality-value').value = opt.dataset.municipality ?? '';
+    document.getElementById('municipality-display').value = opt.dataset.municipality ?? '';
+
+    // Barangay — need to load barangays for the municipality first, then set
+    const munItem = document.querySelector(`#municipality-wrapper .sd-item[data-value="${(opt.dataset.municipality ?? '').replace(/"/g, '\\"')}"]`);
+    if (munItem) {
+        loadBarangays(munItem.dataset.id, opt.dataset.barangay);
+    } else {
+        document.getElementById('barangay-value').value = opt.dataset.barangay ?? '';
+        document.getElementById('barangay-display').value = opt.dataset.barangay ?? '';
+    }
+});
+
+// New Delivery Address checkbox toggle
+document.getElementById('new-address-checkbox').addEventListener('change', function () {
+    const isNew = this.checked;
+    const fields = ['field-lot-no', 'field-province', 'field-municipality', 'field-barangay'];
+
+    document.getElementById('address-select-wrapper').classList.toggle('hidden', isNew);
+    document.getElementById('address-text-wrapper').classList.toggle('hidden', !isNew);
+
+    fields.forEach(id => document.getElementById(id).classList.toggle('hidden', !isNew));
+
+    if (isNew) {
+        // Switch to text mode — sync immediately
+        syncAddress();
+    } else {
+        // Switch back to select mode — restore selected address
+        const select = document.getElementById('address-select');
+        document.getElementById('address-field').value = select.value;
+        // Clear address sub-fields
+        document.getElementById('lot-no-field').value = '';
+        document.getElementById('province-display').value = document.getElementById('province-value').value = '';
+        document.getElementById('municipality-display').value = document.getElementById('municipality-value').value = '';
+        document.getElementById('barangay-display').value = document.getElementById('barangay-value').value = '';
+        document.getElementById('region-display').value = document.getElementById('region-value').value = '';
+        document.getElementById('address-text-display').value = '';
+        document.getElementById('address-field').value = '';
+    }
 });
