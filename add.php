@@ -254,7 +254,7 @@ if (empty($existingItems)) $existingItems = [[]];
 
 <nav class="bg-blue-600 shadow mb-2">
     <div class="max-w-full px-4 py-3 flex items-center justify-between">
-        <a href="index.php" class="text-white font-bold text-xs md:text-lg flex items-center gap-2 hover:text-blue-100">
+        <a href="index.php" class="text-white font-bold text-xs xl:text-lg flex items-center gap-2 hover:text-blue-100">
             <i class="bi bi-arrow-left"></i> Back
         </a>
         <span class="text-blue-200 text-sm flex items-center gap-1">
@@ -264,7 +264,7 @@ if (empty($existingItems)) $existingItems = [[]];
 </nav>
 
 <div class="max-w-full px-2">
-    <h4 class="text-xl font-bold text-gray-800 hidden md:block mb-4">New Sales Order</h4>
+    <h4 class="text-xl font-bold text-gray-800 hidden xl:block mb-4">New Sales Order</h4>
 
     <?php if (!empty($errors)): ?>
         <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded px-4 py-3 text-sm">
@@ -277,7 +277,7 @@ if (empty($existingItems)) $existingItems = [[]];
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
@@ -438,12 +438,12 @@ if (empty($existingItems)) $existingItems = [[]];
                         <input type="date" name="required_delivery_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['required_delivery_date']) ?>">
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Remarks</label>
                         <textarea name="remarks" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['remarks']) ?></textarea>
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>

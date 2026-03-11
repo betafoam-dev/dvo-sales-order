@@ -69,22 +69,22 @@ $orders = $stmt->fetchAll();
 <body class="bg-gray-100 min-h-screen">
 
 <!-- Navbar -->
-<nav class="bg-blue-600 shadow mb-2 md:mb-6">
+<nav class="bg-blue-600 shadow mb-2 xl:mb-6">
     <div class="max-w-full px-4 py-3 flex items-center justify-between">
-        <a href="index.php" class="text-white hidden font-bold text-lg tracking-wide md:flex items-center gap-2">
+        <a href="index.php" class="text-white hidden font-bold text-lg tracking-wide xl:flex items-center gap-2">
             <i class="bi bi-file-earmark-text"></i> Sales Order
         </a>
-        <div class="flex w-full md:w-auto justify-between md:justify-end items-center gap-3">
-            <a href="inventories.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden md:flex items-center gap-1">
+        <div class="flex w-full xl:w-auto justify-between xl:justify-end items-center gap-3">
+            <a href="inventories.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
                 <i class="bi bi-boxes"></i> Inventory
             </a>
-            <a href="customers.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden md:flex items-center gap-1">
+            <a href="customers.php" class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
                 <i class="bi bi-person-badge"></i> Customer
             </a>
             <span class="text-blue-200 text-sm flex items-center gap-1">
                 <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['user_name']) ?>
             </span>
-            <a href="?logout" class="border border-white text-white md:text-base text-sm md:text-sm px-2 py-0.5 md:px-3 md:py-1.5 rounded hover:bg-blue-700">
+            <a href="?logout" class="border border-white text-white xl:text-base text-sm xl:text-sm px-2 py-0.5 xl:px-3 xl:py-1.5 rounded hover:bg-blue-700">
                 <i class="bi bi-box-arrow-in-right"></i> 
                 &nbsp;&nbsp;Logout
             </a>
@@ -92,7 +92,7 @@ $orders = $stmt->fetchAll();
     </div>
 </nav>
 
-<div class="max-w-full px-2 md:px-4">
+<div class="max-w-full px-2 xl:px-4">
 
     <!-- Alert -->
     <?php if (isset($_GET['msg'])): ?>
@@ -108,23 +108,23 @@ $orders = $stmt->fetchAll();
     <div class="bg-white rounded-lg shadow-sm border border-gray-200">
 
         <!-- Card Header -->
-        <div class="flex items-center justify-between px-2 md:px-5 py-2 md:py-4 border-b-none md:border-b border-gray-100">
-            <h5 class="text-base hidden md:block font-bold text-gray-800">Sales Order List</h5>
-            <a href="add.php" class="bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-medium md:px-3 px-2 py-1 md:py-1.5 rounded flex items-center gap-1">
+        <div class="flex items-center justify-between px-2 xl:px-5 py-2 xl:py-4 border-b-none xl:border-b border-gray-100">
+            <h5 class="text-base hidden xl:block font-bold text-gray-800">Sales Order List</h5>
+            <a href="add.php" class="bg-blue-600 hover:bg-blue-700 text-white text-sm xl:text-base font-medium xl:px-3 px-2 py-1 xl:py-1.5 rounded flex items-center gap-1">
                 <i class="bi bi-plus-lg"></i> Create
             </a>
         </div>
 
-        <div class="p-2 md:p-5">
+        <div class="p-2 xl:p-5">
             <!-- Search Form -->
             <form method="GET" class="flex items-center gap-2 mb-4">
                 <div class="flex items-center border border-gray-300 rounded overflow-hidden w-full max-w-md">
-                    <span class="px-1 md:text-xs text-[10px] md:text-base md:px-3 text-gray-400 bg-white"><i class="bi bi-search"></i></span>
+                    <span class="px-1 xl:text-xs text-[10px] xl:text-base xl:px-3 text-gray-400 bg-white"><i class="bi bi-search"></i></span>
                     <input type="text" name="search"
-                           class="flex-1 py-0.5 px-1 md:py-1.5 md:px-2 text-[10px] md:text-sm outline-none"
+                           class="flex-1 py-0.5 px-1 xl:py-1.5 xl:px-2 text-[10px] xl:text-sm outline-none"
                            placeholder="S.O. Code, Customer, SO#..."
                            value="<?= htmlspecialchars($search) ?>">
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] md:text-sm px-2 md:px-4 py-1.5">Search</button>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] xl:text-sm px-2 xl:px-4 py-1.5">Search</button>
                 </div>
                 <?php if ($search): ?>
                     <a href="index.php" class="border border-gray-300 text-gray-600 text-sm px-3 py-1.5 rounded hover:bg-gray-50">Clear</a>
@@ -137,7 +137,7 @@ $orders = $stmt->fetchAll();
                     <thead class="bg-gray-50 border-y border-gray-200">
                         <tr>
                             <?php foreach (['Actions','#','SO Code','SO No.','SO Date','Customer','Total Amount','Status','Created By'] as $th): ?>
-                                <th class="md:px-3 px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500"><?= $th ?></th>
+                                <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500"><?= $th ?></th>
                             <?php endforeach; ?>
                         </tr>
                     </thead>
@@ -149,15 +149,15 @@ $orders = $stmt->fetchAll();
                         <?php else: ?>
                             <?php foreach ($orders as $i => $o): ?>
                             <tr class="hover:bg-gray-50 transition">
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-[11px] md:text-base whitespace-nowrap">
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[11px] xl:text-base whitespace-nowrap">
                                     <div class="flex items-center gap-1">
                                         <a href="view.php?id=<?= $o['id'] ?>" title="View"
-                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1 py-0.5 md:px-2 md:text-sm text-base">
+                                           class="border border-cyan-400 text-cyan-600 hover:bg-cyan-50 rounded px-1 py-0.5 xl:px-2 xl:text-sm text-base">
                                             <i class="bi bi-eye"></i>
                                         </a>
                                         <?php if (strtolower($o['status'] ?? '') === 'order draft'): ?>
                                             <a href="edit.php?id=<?= $o['id'] ?>" title="Edit"
-                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1 md:px-2 py-0.5 md:text-sm text-base">
+                                            class="border border-yellow-400 text-yellow-600 hover:bg-yellow-50 rounded px-1 xl:px-2 py-0.5 xl:text-sm text-base">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
                                         <?php endif; ?>
@@ -165,23 +165,23 @@ $orders = $stmt->fetchAll();
                                             <a href="?delete=<?= $o['id'] ?>&search=<?= urlencode($search) ?>&page=<?= $page ?>"
                                             title="Delete"
                                             onclick="return confirm('Delete this sales order?')"
-                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1 md:px-2 py-0.5 md:text-sm text-base">
+                                            class="border border-red-400 text-red-600 hover:bg-red-50 rounded px-1 xl:px-2 py-0.5 xl:text-sm text-base">
                                                 <i class="bi bi-trash"></i>
                                             </a>
                                         <?php endif; ?>
                                     </div>
                                 </td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-400 md:text-xs text-[5px] whitespace-nowrap"><?= $offset + $i + 1 ?></td>
-                                <td class="md:px-3 px-1 text-[8px] md:text-base py-0.5 md:py-2.5 whitespace-nowrap">
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-400 xl:text-xs text-[5px] whitespace-nowrap"><?= $offset + $i + 1 ?></td>
+                                <td class="xl:px-3 px-1 text-[8px] xl:text-base py-0.5 xl:py-2.5 whitespace-nowrap">
                                     <a href="view.php?id=<?= $o['id'] ?>" class="font-semibold text-blue-600 hover:underline">
                                         <?= htmlspecialchars($o['sales_order_code']) ?>
                                     </a>
                                 </td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($o['so_no'] ?? '—') ?></td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($o['so_date'] ?? '—') ?></td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($o['customer_name']) ?></td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 font-semibold text-[8px] md:text-base text-gray-800 whitespace-nowrap">₱<?= number_format($o['total_amount'] ?? 0, 2) ?></td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 text-[8px] md:text-base whitespace-nowrap">
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($o['so_no'] ?? '—') ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($o['so_date'] ?? '—') ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($o['customer_name']) ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 font-semibold text-[8px] xl:text-base text-gray-800 whitespace-nowrap">₱<?= number_format($o['total_amount'] ?? 0, 2) ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[8px] xl:text-base whitespace-nowrap">
                                     <?php
                                     $status = $o['status'] ?? 'pending';
                                     $badgeClass = match(strtolower($status)) {
@@ -194,11 +194,11 @@ $orders = $stmt->fetchAll();
                                         default          => 'bg-gray-100 text-gray-600',
                                     };
                                     ?>
-                                    <span class="inline-block md:text-xs text-[5px] font-medium md:px-2.5 py-0 md:py-0.5 px-1.5 rounded-full <?= $badgeClass ?>">
+                                    <span class="inline-block xl:text-xs text-[5px] font-medium xl:px-2.5 py-0 xl:py-0.5 px-1.5 rounded-full <?= $badgeClass ?>">
                                         <?= ucfirst($status) ?>
                                     </span>
                                 </td>
-                                <td class="md:px-3 px-1 py-0.5 md:py-2.5 md:text-xs text-[8px] text-gray-400 whitespace-nowrap"><?= htmlspecialchars($o['created_by_name'] ?? '—') ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 xl:text-xs text-[8px] text-gray-400 whitespace-nowrap"><?= htmlspecialchars($o['created_by_name'] ?? '—') ?></td>
                             </tr>
                             <?php endforeach; ?>
                         <?php endif; ?>
@@ -222,7 +222,7 @@ $orders = $stmt->fetchAll();
         </div>
     </div>
 
-    <p class="text-gray-400 md:text-xs text-[10px] mt-2">Showing <?= count($orders) ?> of <?= $totalRows ?> records.</p>
+    <p class="text-gray-400 xl:text-xs text-[10px] mt-2">Showing <?= count($orders) ?> of <?= $totalRows ?> records.</p>
 </div>
 <script src="js/loader.js"></script>
 </body>

@@ -53,15 +53,15 @@ $customers = $stmt->fetchAll();
 <body>
 <nav class="navbar navbar-dark bg-blue-600 mb-2">
     <div class="container-fluid">
-        <a class="navbar-brand fw-bold md:block hidden" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
-        <span class="navbar-text text-white md:block hidden fw-semibold"><i class="bi bi-person-badge me-1"></i>Customers</span>
+        <a class="navbar-brand fw-bold xl:block hidden" href="index.php"><i class="bi bi-arrow-left me-2"></i>Sales Orders</a>
+        <span class="navbar-text text-white xl:block hidden fw-semibold"><i class="bi bi-person-badge me-1"></i>Customers</span>
         <span class="ms-auto text-white-50 small"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
     </div>
 </nav>
 
 <div class="container-fluid px-2">
 
-    <div class="d-flex align-items-center justify-content-between md:mb-3 mb-1">
+    <div class="d-flex align-items-center justify-content-between xl:mb-3 mb-1">
         <div>
             <small class="text-muted"><b>Customers:</b> <?= number_format($totalRows) ?> total customers</small>
         </div>
@@ -72,10 +72,10 @@ $customers = $stmt->fetchAll();
             <form class="row g-2 mb-3" method="GET">
                 <div class="col-md-4">
                     <div class="flex items-center border border-gray-300 rounded overflow-hidden w-full max-w-md">
-                        <span class="px-1 md:text-xs text-[10px] md:text-base md:px-3 text-gray-400 bg-white"><i class="bi bi-search text-muted"></i></span>
-                        <input type="text" name="search" class="flex-1 border py-0.5 px-1 md:py-1.5 md:px-2 text-[10px] md:text-sm outline-none" placeholder="Search by code, name..." value="<?= htmlspecialchars($search) ?>">
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] md:text-sm px-2 md:px-4 py-1.5">Search</button>
-                        <?php if ($search): ?><a href="customers.php" class="text-[10px] text-black md:text-sm px-2 md:px-4 py-1.5 border-2">Clear</a><?php endif; ?>
+                        <span class="px-1 xl:text-xs text-[10px] xl:text-base xl:px-3 text-gray-400 bg-white"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="search" class="flex-1 border py-0.5 px-1 xl:py-1.5 xl:px-2 text-[10px] xl:text-sm outline-none" placeholder="Search by code, name..." value="<?= htmlspecialchars($search) ?>">
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] xl:text-sm px-2 xl:px-4 py-1.5">Search</button>
+                        <?php if ($search): ?><a href="customers.php" class="text-[10px] text-black xl:text-sm px-2 xl:px-4 py-1.5 border-2">Clear</a><?php endif; ?>
                     </div>
                 </div>
             </form>
@@ -84,13 +84,13 @@ $customers = $stmt->fetchAll();
                 <table class="w-full min-w-max text-sm text-left">
                     <thead class="bg-gray-50 border-y border-gray-200">
                         <tr>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">#</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Customer Name</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Address</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Sales Person</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">TIN</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Contact No</th>
-                            <th class=" px-1 py-0.5 md:py-2.5 text-[9px] text-right md:md:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Email</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">#</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Customer Name</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Address</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] text-right xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Sales Person</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] text-right xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">TIN</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] text-right xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Contact No</th>
+                            <th class=" px-1 py-0.5 xl:py-2.5 text-[9px] text-right xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Email</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -99,13 +99,13 @@ $customers = $stmt->fetchAll();
                         <?php else: ?>
                             <?php foreach ($customers as $idx => $cus): ?>
                             <tr class="hover:bg-gray-50 transition">
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-400 md:text-xs text-[5px] whitespace-nowrap"><?= $offset + $idx + 1 ?></td>
-                                <td class=" px-1 text-[8px] md:text-base py-0.5 md:py-2.5 whitespace-nowrap"><span class="fw-semibold text-primary"><?= htmlspecialchars($cus['full_name']) ?></span></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap"><?= htmlspecialchars($cus['address'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['sales_person'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['tin_no'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['contact_no'] ?? '') ?></td>
-                                <td class=" px-1 py-0.5 md:py-2.5 text-gray-700 text-[8px] md:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['email'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-400 xl:text-xs text-[5px] whitespace-nowrap"><?= $offset + $idx + 1 ?></td>
+                                <td class=" px-1 text-[8px] xl:text-base py-0.5 xl:py-2.5 whitespace-nowrap"><span class="fw-semibold text-primary"><?= htmlspecialchars($cus['full_name']) ?></span></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($cus['address'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['sales_person'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['tin_no'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['contact_no'] ?? '') ?></td>
+                                <td class=" px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap text-right"><?= htmlspecialchars($cus['email'] ?? '') ?></td>
                                 
                             </tr>
                             <?php endforeach; ?>

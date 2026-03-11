@@ -329,7 +329,7 @@ $currentStatus = $data['status'];
 
 <nav class="bg-yellow-400 shadow mb-2">
     <div class="max-w-full px-4 py-3 flex items-center justify-between">
-        <a href="index.php" class="text-gray-800 font-bold text-xs md:text-lg flex items-center gap-2 hover:text-gray-600">
+        <a href="index.php" class="text-gray-800 font-bold text-xs xl:text-lg flex items-center gap-2 hover:text-gray-600">
             <i class="bi bi-arrow-left"></i> Back
         </a>
         <span class="text-gray-700 text-sm flex items-center gap-1">
@@ -339,7 +339,7 @@ $currentStatus = $data['status'];
 </nav>
 
 <div class="max-w-full px-2">
-    <h4 class="text-xl font-bold text-gray-800 hidden md:block mb-4">
+    <h4 class="text-xl font-bold text-gray-800 hidden xl:block mb-4">
         Edit Order <span class="text-gray-400 font-normal">#<?= htmlspecialchars($data['id']) ?></span>
         <?php
             $badgeClass = match($currentStatus) {
@@ -372,7 +372,7 @@ $currentStatus = $data['status'];
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
@@ -531,12 +531,12 @@ $currentStatus = $data['status'];
                         <input type="date" name="required_delivery_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars(substr($data['required_delivery_date'] ?? '',0,10)) ?>">
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Remarks</label>
                         <textarea name="remarks" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['remarks']) ?></textarea>
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
