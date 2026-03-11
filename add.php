@@ -271,6 +271,7 @@ if (empty($existingItems)) $existingItems = [[]];
         </div>
     <?php endif; ?>
 
+    <!--Test-->
     <form method="POST" id="so-form">
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
@@ -284,16 +285,23 @@ if (empty($existingItems)) $existingItems = [[]];
 
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
-                        <select name="customer_name" id="customer-select" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white" required>
-                            <option value="">-- Select Customer --</option>
-                            <?php foreach ($customers as $c): ?>
-                                <option value="<?= htmlspecialchars($c['full_name']) ?>"
-                                        data-address="<?= htmlspecialchars($c['address']) ?>"
-                                        <?= $data['customer_name'] === $c['full_name'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($c['full_name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="sd-wrapper" id="customer-wrapper">
+                            <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
+                            <input type="text" class="sd-input" id="customer-display" placeholder="-- Select Customer --" readonly
+                                value="<?= htmlspecialchars($data['customer_name']) ?>">
+                            <div class="sd-dropdown" id="customer-dropdown">
+                                <input type="text" class="sd-search" placeholder="Search customer...">
+                                <div class="sd-list">
+                                    <?php foreach ($customers as $c): ?>
+                                        <div class="sd-item"
+                                            data-value="<?= htmlspecialchars($c['full_name']) ?>"
+                                            data-address="<?= htmlspecialchars($c['address']) ?>">
+                                            <?= htmlspecialchars($c['full_name']) ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="hidden">
@@ -466,18 +474,25 @@ if (empty($existingItems)) $existingItems = [[]];
                     <div class="item-row">
                         <div class="item-field">
                             <label class="item-label">Item</label>
-                            <select name="items[<?= $idx ?>][inventory_id]" class="inv-select item-input" required>
-                                <option value="">-- Select Item --</option>
-                                <?php foreach ($inventories as $inv): ?>
-                                    <option value="<?= $inv['id'] ?>"
-                                        data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
-                                        data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
-                                        data-uom="<?= htmlspecialchars($inv['uom']) ?>"
-                                        <?= ($item['inventory_id'] ?? '') == $inv['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <input type="hidden" name="items[<?= $idx ?>][inventory_id]" class="inv-id-value" value="<?= htmlspecialchars($item['inventory_id'] ?? '') ?>">
+                            <div class="sd-wrapper inv-sd-wrapper">
+                                <input type="text" class="sd-input inv-display" placeholder="-- Select Item --" readonly>
+                                <div class="sd-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search item...">
+                                    <div class="sd-list">
+                                        <?php foreach ($inventories as $inv): ?>
+                                            <div class="sd-item"
+                                                data-value="<?= $inv['id'] ?>"
+                                                data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
+                                                data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
+                                                data-uom="<?= htmlspecialchars($inv['uom']) ?>"
+                                                data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>">
+                                                <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="item-field">
@@ -578,45 +593,6 @@ window.appData = {
 };
 </script>
 <script src="js/add.js"></script>
-<script src="js/searchable-select.js"></script>
-<script>
-// Customer SearchableSelect (partner's addition)
-const customerSS = new SearchableSelect(document.getElementById('customer-select'), { placeholder: 'Search customer...' });
-customerSS.wrapper.addEventListener('ss:change', e => {
-    document.getElementById('billing-address-field').value = e.detail?.data?.address || '';
-});
-
-// Inventory items on existing rows (partner's addition)
-document.querySelectorAll('.inv-select').forEach(sel => {
-    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
-    ss.wrapper.addEventListener('ss:change', e => {
-        if (!e.detail) return;
-        const inv = (window.appData || window.appConfig).inventories[e.detail.value];
-        if (!inv) return;
-        const row = ss.wrapper.closest('.item-row');
-        row.querySelector('.item-code').value = inv.stock_code;
-        row.querySelector('.item-desc').value = inv.stock_name;
-        row.querySelector('.item-uom').value  = inv.uom;
-    });
-});
-
-// Patch add-row to init SearchableSelect on new div rows (partner's addition, updated for div)
-const addRowBtn = document.getElementById('add-row');
-addRowBtn.addEventListener('ss:init-row', e => {
-    const row = e.detail;
-    const sel = row.querySelector('.inv-select');
-    if (!sel) return;
-    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
-    ss.wrapper.addEventListener('ss:change', ev => {
-        if (!ev.detail) return;
-        const inv = (window.appData || window.appConfig).inventories[ev.detail.value];
-        if (!inv) return;
-        row.querySelector('.item-code').value = inv.stock_code;
-        row.querySelector('.item-desc').value = inv.stock_name;
-        row.querySelector('.item-uom').value  = inv.uom;
-    });
-});
-</script>
 <script>
 (function () {
     const form      = document.getElementById('so-form');
