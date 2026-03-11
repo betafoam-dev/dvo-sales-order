@@ -304,6 +304,24 @@ $currentStatus = $data['status'];
             text-transform: uppercase;
             letter-spacing: 0.05em;
         }
+        .sd-wrapper { position: relative; }
+        .sd-input {
+            width: 100%; box-sizing: border-box; border: 1px solid #d1d5db; border-radius: 4px;
+            padding: 6px 28px 6px 10px; font-size: 0.875rem;
+            background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236b7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E") no-repeat right 8px center;
+            cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .sd-input:focus { border-color: #fbbf24; box-shadow: 0 0 0 1px #fde68a; outline: none; }
+        .sd-dropdown {
+            display: none; position: absolute; z-index: 9999; left: 0; right: 0; top: calc(100% + 2px);
+            background: #fff; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.12);
+        }
+        .sd-search { width: 100%; box-sizing: border-box; border: none; border-bottom: 1px solid #e5e7eb; padding: 7px 10px; font-size: 0.8rem; outline: none; }
+        .sd-list { max-height: 200px; overflow-y: auto; }
+        .sd-item { padding: 6px 10px; font-size: 0.85rem; cursor: pointer; }
+        .sd-item:hover { background: #eff6ff; }
+        .sd-item .sd-hint { font-size: 0.75rem; color: #9ca3af; }
+        .sd-empty { padding: 8px 10px; font-size: 0.8rem; color: #9ca3af; }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
@@ -362,14 +380,23 @@ $currentStatus = $data['status'];
 
                     <div class="sm:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
-                        <select name="customer_name" id="customer-select" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 bg-white" required>
-                            <option value="">-- Select Customer --</option>
-                            <?php foreach ($customers as $c): ?>
-                                <option value="<?= htmlspecialchars($c['full_name']) ?>" data-address="<?= htmlspecialchars($c['address']) ?>" <?= $data['customer_name'] === $c['full_name'] ? 'selected' : '' ?>>
-                                    <?= htmlspecialchars($c['full_name']) ?>
-                                </option>
-                            <?php endforeach; ?>
-                        </select>
+                        <div class="sd-wrapper" id="customer-wrapper">
+                            <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
+                            <input type="text" class="sd-input" id="customer-display" placeholder="-- Select Customer --" readonly
+                                value="<?= htmlspecialchars($data['customer_name']) ?>">
+                            <div class="sd-dropdown" id="customer-dropdown">
+                                <input type="text" class="sd-search" placeholder="Search customer...">
+                                <div class="sd-list">
+                                    <?php foreach ($customers as $c): ?>
+                                        <div class="sd-item"
+                                            data-value="<?= htmlspecialchars($c['full_name']) ?>"
+                                            data-address="<?= htmlspecialchars($c['address']) ?>">
+                                            <?= htmlspecialchars($c['full_name']) ?>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="hidden">
@@ -531,18 +558,26 @@ $currentStatus = $data['status'];
 
                         <div class="item-field">
                             <label class="item-label">Item</label>
-                            <select name="items[<?= $idx ?>][inventory_id]" class="inv-select item-input" required>
-                                <option value="">-- Select Item --</option>
-                                <?php foreach ($inventories as $inv): ?>
-                                    <option value="<?= $inv['id'] ?>"
-                                        data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
-                                        data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
-                                        data-uom="<?= htmlspecialchars($inv['uom']) ?>"
-                                        <?= ($item['inventory_id'] ?? '') == $inv['id'] ? 'selected' : '' ?>>
-                                        <?= htmlspecialchars($inv['stock_code'].' - '.$inv['stock_name']) ?>
-                                    </option>
-                                <?php endforeach; ?>
-                            </select>
+                            <input type="hidden" name="items[<?= $idx ?>][inventory_id]" class="inv-id-value" value="<?= htmlspecialchars($item['inventory_id'] ?? '') ?>">
+                            <div class="sd-wrapper inv-sd-wrapper">
+                                <input type="text" class="sd-input inv-display" placeholder="-- Select Item --" readonly
+                                    value="<?= htmlspecialchars(isset($item['inventory_id']) ? ($item['item_code'] ?? '') . ' - ' . ($item['item_description'] ?? '') : '') ?>">
+                                <div class="sd-dropdown">
+                                    <input type="text" class="sd-search" placeholder="Search item...">
+                                    <div class="sd-list">
+                                        <?php foreach ($inventories as $inv): ?>
+                                            <div class="sd-item"
+                                                data-value="<?= $inv['id'] ?>"
+                                                data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
+                                                data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
+                                                data-uom="<?= htmlspecialchars($inv['uom']) ?>"
+                                                data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>">
+                                                <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>
+                                            </div>
+                                        <?php endforeach; ?>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="item-field">
@@ -714,8 +749,7 @@ window.appConfig = {
     editId: <?= $id ?>
 };
 </script>
-<script src="js/edit.js"></script>
-<script src="js/searchable-select.js"></script>
+<script src="js/editing.js"></script>
 <script>
 (function () {
     const form         = document.getElementById('so-form');
@@ -759,31 +793,6 @@ window.appConfig = {
         lockAll();
     });
 })();
-</script>
-<script>
-function initInvSelectRow(row) {
-    const sel = row.querySelector('.inv-select');
-    if (!sel || sel.dataset.ssInit) return;
-    sel.dataset.ssInit = '1';
-    const ss = new SearchableSelect(sel, { placeholder: 'Search item...' });
-    ss.wrapper.addEventListener('ss:change', e => {
-        if (!e.detail) return;
-        const inv = (window.appData || window.appConfig).inventories[e.detail.value];
-        if (!inv) return;
-        row.querySelector('.item-code').value = inv.stock_code;
-        row.querySelector('.item-desc').value = inv.stock_name;
-        row.querySelector('.item-uom').value  = inv.uom;
-    });
-}
-
-const customerSS = new SearchableSelect(document.getElementById('customer-select'), { placeholder: 'Search customer...' });
-customerSS.wrapper.addEventListener('ss:change', e => {
-    document.getElementById('billing-address-field').value = e.detail?.data?.address || '';
-});
-
-document.querySelectorAll('.inv-select').forEach(sel => {
-    initInvSelectRow(sel.closest('.item-row'));
-});
 </script>
 </body>
 </html>

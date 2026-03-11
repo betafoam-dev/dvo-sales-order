@@ -592,7 +592,7 @@ window.appData = {
     rowIndex: <?= count($existingItems) ?>
 };
 </script>
-<script src="js/add.js"></script>
+<script src="js/adding.js"></script>
 <script>
 (function () {
     const form      = document.getElementById('so-form');

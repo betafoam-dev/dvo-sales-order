@@ -1,8 +1,7 @@
-const inventories = window.appConfig.inventories;
-const uoms = window.appConfig.uoms;
-const saved = window.appConfig.saved;
-let rowIndex = window.appConfig.rowIndex;
-const editId = window.appConfig.editId;
+const inventories = window.appData.inventories;
+const uoms = window.appData.uoms;
+const saved = window.appData.saved;
+let rowIndex = window.appData.rowIndex;
 
 function initSD(wrapperId, onSelect) {
     const wrapper = document.getElementById(wrapperId);
@@ -14,15 +13,15 @@ function initSD(wrapperId, onSelect) {
 
     function filterItems(q) {
         const lower = q.toLowerCase();
-        let vis = 0;
+        let visCount = 0;
         list.querySelectorAll('.sd-item').forEach(item => {
             const text = (item.firstChild?.nodeType === 3 ? item.firstChild.textContent : item.textContent).toLowerCase();
             const show = !q || text.includes(lower);
             item.style.display = show ? '' : 'none';
-            if (show) vis++;
+            if (show) visCount++;
         });
         let emptyEl = list.querySelector('.sd-empty');
-        if (vis === 0) {
+        if (visCount === 0) {
             if (!emptyEl) { emptyEl = document.createElement('div'); emptyEl.className = 'sd-empty'; emptyEl.textContent = 'No results'; list.appendChild(emptyEl); }
             emptyEl.style.display = '';
         } else if (emptyEl) emptyEl.style.display = 'none';
@@ -64,6 +63,64 @@ function initSD(wrapperId, onSelect) {
     document.addEventListener('click', e => { if (!wrapper.contains(e.target)) closeDropdown(); });
 }
 
+function initInvSD(wrapper) {
+    const display = wrapper.querySelector('.inv-display');
+    const hidden = wrapper.querySelector('.inv-id-value') || wrapper.closest('.item-row').querySelector('.inv-id-value');
+    const dropdown = wrapper.querySelector('.sd-dropdown');
+    const search = wrapper.querySelector('.sd-search');
+    const list = wrapper.querySelector('.sd-list');
+    const row = wrapper.closest('.item-row');
+
+    function filterItems(q) {
+        const lower = q.toLowerCase();
+        let visCount = 0;
+        list.querySelectorAll('.sd-item').forEach(item => {
+            const text = item.textContent.toLowerCase();
+            const show = !q || text.includes(lower);
+            item.style.display = show ? '' : 'none';
+            if (show) visCount++;
+        });
+        let emptyEl = list.querySelector('.sd-empty');
+        if (visCount === 0) {
+            if (!emptyEl) {
+                emptyEl = document.createElement('div');
+                emptyEl.className = 'sd-empty';
+                emptyEl.textContent = 'No results';
+                list.appendChild(emptyEl);
+            }
+            emptyEl.style.display = '';
+        } else if (emptyEl) {
+            emptyEl.style.display = 'none';
+        }
+    }
+
+    function openDropdown() {
+        document.querySelectorAll('.sd-dropdown').forEach(d => { if (d !== dropdown) d.style.display = 'none'; });
+        dropdown.style.display = 'block';
+        search.value = '';
+        filterItems('');
+        search.focus();
+    }
+
+    function closeDropdown() { dropdown.style.display = 'none'; }
+
+    display.addEventListener('click', () => dropdown.style.display === 'block' ? closeDropdown() : openDropdown());
+    search.addEventListener('input', () => filterItems(search.value));
+    list.addEventListener('mousedown', e => {
+        const item = e.target.closest('.sd-item');
+        if (!item || item.style.display === 'none') return;
+        e.preventDefault();
+        display.value = item.dataset.label;
+        hidden.value = item.dataset.value;
+        row.querySelector('.item-code').value = item.dataset.code;
+        row.querySelector('.item-desc').value = item.dataset.name;
+        row.querySelector('.item-uom').value = item.dataset.uom;
+        closeDropdown();
+        recalcRow(row);
+    });
+    document.addEventListener('click', e => { if (!wrapper.contains(e.target)) closeDropdown(); });
+}
+
 function syncAddress() {
     const parts = [
         document.getElementById('lot-no-field').value.trim(),
@@ -89,7 +146,7 @@ initSD('province-wrapper', item => {
 
 document.getElementById('region-wrapper').addEventListener('sd-change', e => {
     const rid = e.detail?.id;
-    const url = rid ? `edit.php?id=${editId}&ajax=provinces&region_id=${rid}` : `edit.php?id=${editId}&ajax=provinces`;
+    const url = rid ? `add.php?ajax=provinces&region_id=${rid}` : 'add.php?ajax=provinces';
     fetch(url).then(r => r.json()).then(provinces => {
         document.querySelector('#province-wrapper .sd-list').innerHTML = provinces.map(p =>
             `<div class="sd-item" data-value="${p.province_name}" data-id="${p.province_id}" data-region-id="${p.region_id}">${p.province_name}</div>`
@@ -109,7 +166,7 @@ initSD('municipality-wrapper', item => {
 
 document.getElementById('province-wrapper').addEventListener('sd-change', e => {
     const pid = e.detail?.id;
-    const url = pid ? `edit.php?id=${editId}&ajax=municipalities&province_id=${pid}` : `edit.php?id=${editId}&ajax=municipalities`;
+    const url = pid ? `add.php?ajax=municipalities&province_id=${pid}` : 'add.php?ajax=municipalities';
     fetch(url).then(r => r.json()).then(municipalities => {
         const pname = document.getElementById('province-display').value;
         const rval = document.getElementById('region-value').value;
@@ -128,7 +185,7 @@ initSD('barangay-wrapper', () => syncAddress());
 function loadBarangays(municipalityId, preselect) {
     const list = document.getElementById('barangay-list');
     list.innerHTML = '<div class="sd-empty">Loading...</div>';
-    fetch(`edit.php?id=${editId}&ajax=barangays&municipality_id=${municipalityId}`)
+    fetch(`add.php?ajax=barangays&municipality_id=${municipalityId}`)
         .then(r => r.json())
         .then(barangays => {
             if (!barangays.length) { list.innerHTML = '<div class="sd-empty">No barangays found</div>'; return; }
@@ -162,17 +219,8 @@ function recalcTotal() {
 }
 
 function attachRowEvents(row) {
-    const invSel = row.querySelector('.inv-select');
-    if (invSel) {
-        invSel.addEventListener('change', function () {
-            const inv = inventories[this.value];
-            if (inv) {
-                row.querySelector('.item-code').value = inv.stock_code;
-                row.querySelector('.item-desc').value = inv.stock_name;
-                row.querySelector('.item-uom').value = inv.uom;
-            }
-        });
-    }
+    const invWrapper = row.querySelector('.inv-sd-wrapper');
+    if (invWrapper) initInvSD(invWrapper);
     row.querySelector('.item-qty').addEventListener('input', () => recalcRow(row));
     row.querySelector('.item-price').addEventListener('input', () => recalcRow(row));
     row.querySelector('.remove-row').addEventListener('click', () => {
@@ -183,22 +231,36 @@ function attachRowEvents(row) {
 document.querySelectorAll('.item-row').forEach(row => { attachRowEvents(row); recalcRow(row); });
 
 const uomOptions = uoms.map(u => `<option value="${u.uom_name}">${u.uom_name}</option>`).join('');
-const invOptions = Object.values(inventories).map(inv =>
-    `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
+// const invOptions = Object.values(inventories).map(inv =>
+//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
+// ).join('');
+
+const invSDOptions = Object.values(inventories).map(inv =>
+    `<div class="sd-item"
+          data-value="${inv.id}"
+          data-code="${inv.stock_code}"
+          data-name="${inv.stock_name}"
+          data-uom="${inv.uom}"
+          data-label="${inv.stock_code} - ${inv.stock_name}">
+        ${inv.stock_code} - ${inv.stock_name}
+    </div>`
 ).join('');
 
-// ── Add Item: builds a div card row and calls initInvSelectRow for SearchableSelect ──
+// ── Add Item: builds a div card row (your layout) and fires ss:init-row for partner's SearchableSelect ──
 document.getElementById('add-row').addEventListener('click', function () {
     const row = document.createElement('div');
     row.className = 'item-row';
     row.innerHTML = `
-        <input type="hidden" name="items[${rowIndex}][item_id]" value="">
-
         <div class="item-field">
             <label class="item-label">Item</label>
-            <select name="items[${rowIndex}][inventory_id]" class="inv-select item-input" required>
-                <option value="">-- Select Item --</option>${invOptions}
-            </select>
+            <input type="hidden" name="items[${rowIndex}][inventory_id]" class="inv-id-value" value="">
+            <div class="sd-wrapper inv-sd-wrapper">
+                <input type="text" class="sd-input inv-display" placeholder="-- Select Item --" readonly>
+                <div class="sd-dropdown">
+                    <input type="text" class="sd-search" placeholder="Search item...">
+                    <div class="sd-list">${invSDOptions}</div>
+                </div>
+            </div>
         </div>
 
         <div class="item-field">
@@ -242,20 +304,15 @@ document.getElementById('add-row').addEventListener('click', function () {
     document.getElementById('items-body').appendChild(row);
     attachRowEvents(row);
 
-    // Init SearchableSelect on the new div row
-    if (typeof initInvSelectRow === 'function') initInvSelectRow(row);
+    // Notify partner's SearchableSelect initializer about the new row
+    // document.getElementById('add-row').dispatchEvent(new CustomEvent('ss:init-row', { detail: row }));
 
     rowIndex++;
 });
 
 recalcTotal();
 
-document.getElementById('customer-select').addEventListener('change', function () {
-    const opt = this.options[this.selectedIndex];
-    document.getElementById('billing-address-field').value = opt.dataset.address ?? '';
+initSD('customer-wrapper', item => {
+    document.getElementById('customer-name-value').value = item ? item.dataset.value : '';
+    document.getElementById('billing-address-field').value = item ? (item.dataset.address ?? '') : '';
 });
-
-(function () {
-    const sel = document.getElementById('customer-select');
-    if (sel.value) sel.dispatchEvent(new Event('change'));
-})();
