@@ -23,6 +23,10 @@
     justify-content: center;
 }
 
+@media print {
+    .no-print { display: none !important; }
+}
+
 .loader-ring::before {
     content: '';
     position: absolute;

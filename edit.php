@@ -419,7 +419,7 @@ $currentStatus = $data['status'];
                     </div>
 
                     <div class="xl:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700">Complete Address</label>
+                        <label class="block text-sm font-semibold text-gray-700">Delivery Address</label>
                         <input type="text" name="address" id="address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['address']) ?>" readonly>
                     </div>
 
@@ -521,10 +521,10 @@ $currentStatus = $data['status'];
                         </select>
                     </div>
 
-                    <div>
+                    <!--<div>
                         <label class="block text-sm font-semibold text-gray-700">Deliver To</label>
                         <input type="text" name="deliver_to" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['deliver_to']) ?>">
-                    </div>
+                    </div>-->
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Required Delivery Date</label>
@@ -795,6 +795,6 @@ window.appConfig = {
     });
 })();
 </script>
-<script src="js/loader.js"></script>
+<script src="js/loading.js"></script>
 </body>
 </html>

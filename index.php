@@ -224,6 +224,6 @@ $orders = $stmt->fetchAll();
 
     <p class="text-gray-400 xl:text-xs text-[10px] mt-2">Showing <?= count($orders) ?> of <?= $totalRows ?> records.</p>
 </div>
-<script src="js/loader.js"></script>
+<script src="js/loading.js"></script>
 </body>
 </html>

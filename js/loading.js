@@ -3,8 +3,8 @@
     const el = document.createElement('div');
     el.id = 'page-loader';
     el.innerHTML = `
-        <div class="loader-ring">
-            <img class="loader-logo" src="images/logo.png" alt="Loading...">
+        <div class="loader-ring no-print">
+            <img class="loader-logo" src="images/logo.png" alt="">
         </div>
     `;
     document.body.appendChild(el);

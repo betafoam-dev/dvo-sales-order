@@ -648,6 +648,6 @@ window.appData = {
     });
 })();
 </script>
-<script src="js/loader.js"></script>
+<script src="js/loading.js"></script>
 </body>
 </html>
