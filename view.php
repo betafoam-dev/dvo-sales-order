@@ -156,6 +156,57 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
                     <div class="info-value"><?= nl2br(htmlspecialchars($data['special_instruction'])) ?></div>
                 </div>
                 <?php endif; ?>
+                <?php if (!empty($data['attachment'])): ?>
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
+                        <div class="p-3">
+                            <div class="text-xs font-semibold uppercase tracking-widest text-gray-400 border-b border-gray-100 pb-2 mb-3">
+                                Attachment
+                            </div>
+
+                            <?php
+                                // Detect MIME type from the data URI prefix
+                                $attachment = $data['attachment'];
+                                $mime = '';
+                                if (preg_match('/^data:([a-zA-Z0-9\/+\-]+);base64,/', $attachment, $matches)) {
+                                    $mime = $matches[1];
+                                }
+                                $isImage = in_array($mime, ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']);
+                                $isPdf   = $mime === 'application/pdf';
+                            ?>
+
+                            <?php if ($isImage): ?>
+                                <img src="<?= htmlspecialchars($attachment) ?>"
+                                    alt="Attachment"
+                                    class="max-w-full rounded border border-gray-200"
+                                    style="max-height: 600px; object-fit: contain;">
+
+                            <?php elseif ($isPdf): ?>
+                                <iframe src="<?= htmlspecialchars($attachment) ?>"
+                                        class="w-full rounded border border-gray-200"
+                                        style="height: 600px;"
+                                        title="PDF Attachment">
+                                </iframe>
+
+                            <?php else: ?>
+                                <!-- Fallback for other file types (doc, xls, etc.) — offer download -->
+                                <a href="<?= htmlspecialchars($attachment) ?>"
+                                download="attachment"
+                                class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 rounded px-4 py-2 text-sm hover:bg-blue-100">
+                                    <i class="bi bi-download"></i> Download Attachment
+                                </a>
+                            <?php endif; ?>
+
+                            <!-- Always show a download link below the preview -->
+                            <div class="mt-2">
+                                <a href="<?= htmlspecialchars($attachment) ?>"
+                                download="attachment"
+                                class="text-xs text-gray-400 hover:text-gray-600 flex items-center gap-1">
+                                    <i class="bi bi-download"></i> Download
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <?php endif; ?>
             </div>
         </div>
     </div>
@@ -387,6 +438,79 @@ $totalPages = count($chunks);
 </div>
 <?php endforeach; ?>
 <!--End of printing layout-->
+<?php if (!empty($data['attachment'])): ?>
+    <?php
+        $attachment = $data['attachment'];
+        $mime = '';
+        if (preg_match('/^data:([a-zA-Z0-9\/+\-]+);base64,/', $attachment, $matches)) {
+            $mime = $matches[1];
+        }
+        $isImage = in_array($mime, ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']);
+        $isPdf   = $mime === 'application/pdf';
+    ?>
+    <div class="hidden print:block" style="page-break-before: always;">
+
+        <!-- Same header as SO pages -->
+        <div class="px-4 pt-2 text-sm">
+            <div class="w-full flex flex-row items-start justify-between">
+                <div>
+                    <img src="images/logotext.png" class="h-10" />
+                    <p>Marketing Department</p>
+                </div>
+                <div>
+                    <p>SAL-F002A-2.0</p>
+                </div>
+            </div>
+            <h1 class="text-center pt-1 font-bold text-lg">SALES ORDER FORM — ATTACHMENT</h1>
+            <p class="text-center text-xs text-gray-500 mb-2">
+                <?= htmlspecialchars($data['sales_order_code']) ?> &mdash; <?= htmlspecialchars($data['customer_name']) ?>
+            </p>
+        </div>
+
+        <!-- Attachment content -->
+        <div class="px-4">
+            <?php if ($isImage): ?>
+                <img src="<?= htmlspecialchars($attachment) ?>"
+                     alt="Attachment"
+                     style="max-width: 100%; max-height: 220mm; object-fit: contain; display: block; margin: 0 auto;">
+
+            <?php elseif ($isPdf): ?>
+                <!-- PDF: rendered via canvas so it prints properly -->
+                <canvas id="pdf-print-canvas" style="max-width:100%; display:block; margin:0 auto;"></canvas>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+                <script>
+                (function () {
+                    const dataUri = <?= json_encode($attachment) ?>;
+                    const base64  = dataUri.split(',')[1];
+                    const binary  = atob(base64);
+                    const bytes   = new Uint8Array(binary.length);
+                    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                    pdfjsLib.GlobalWorkerOptions.workerSrc =
+                        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+                    pdfjsLib.getDocument({ data: bytes }).promise.then(function (pdf) {
+                        // Render first page only (fits one print page cleanly)
+                        pdf.getPage(1).then(function (page) {
+                            const viewport = page.getViewport({ scale: 1.8 });
+                            const canvas   = document.getElementById('pdf-print-canvas');
+                            canvas.width   = viewport.width;
+                            canvas.height  = viewport.height;
+                            page.render({ canvasContext: canvas.getContext('2d'), viewport });
+                        });
+                    });
+                })();
+                </script>
+
+            <?php else: ?>
+                <p class="text-center text-gray-500 text-sm mt-8">
+                    Attachment cannot be previewed in print (unsupported file type).
+                </p>
+            <?php endif; ?>
+        </div>
+
+    </div>
+<?php endif; ?>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="js/loading.js"></script>

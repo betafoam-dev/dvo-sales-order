@@ -4,7 +4,7 @@ require_once 'config.php';
 
 $conn = getDBConnection();
 
-if (isset($_GET['ajax'])) {
+if (isset($_GET['ajax'])) { 
     header('Content-Type: application/json');
     $ajax = $_GET['ajax'];
 
@@ -59,7 +59,7 @@ $data = [
     'payment_terms' => '', 'contact_person' => '', 'required_delivery_date' => '',
     'deliver_to' => '', 'is_new' => 0,
     'remarks' => '', 'special_instruction' => '', 'status' => 'order draft', 'total_amount' => 0,
-    'lot_no' => '', 'barangay' => '', 'municipality' => '', 'province' => '', 'region' => ''
+    'lot_no' => '', 'barangay' => '', 'municipality' => '', 'province' => '', 'region' => '', 'attachment' => '',
 ];
 
 function generateUuid() {
@@ -108,9 +108,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 (sales_order_code, uuid, customer_name, tin_no, so_no, order_date, address, billing_address,
                  lot_no, barangay, municipality, province, region,
                  contact_details, payment_terms, contact_person, required_delivery_date,
-                 deliver_to, is_new, remarks, special_instruction, status, total_amount,
+                 deliver_to, is_new, remarks, special_instruction, status, total_amount, attachment,
                  created_by, updated_by, created_at, updated_at)
-                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
+                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
             $stmt->execute([
                 $soUuid,
                 $data['customer_name'], $data['tin_no'], $data['so_no'],
@@ -120,6 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['contact_person'], $data['required_delivery_date'] ?: null, $data['deliver_to'],
                 $data['is_new'] ? 1 : 0,
                 $data['remarks'], $data['special_instruction'], $data['status'], $total,
+                $data['attachment'],
                 $_SESSION['user_id'], $_SESSION['user_id']
             ]);
             $soId = $conn->lastInsertId();
@@ -481,6 +482,16 @@ if (empty($existingItems)) $existingItems = [[]];
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
+                    <div class="xl:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700">Attachment</label>
+                        <input type="file" id="attachment-file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                        <input type="hidden" name="attachment" id="attachment-b64" value="">
+                        <div id="attachment-preview" class="mt-1 text-xs text-gray-500 hidden">
+                            <span id="attachment-filename"></span>
+                            <button type="button" id="attachment-clear" class="ml-2 text-red-400 hover:text-red-600">✕ Remove</button>
+                        </div>
+                    </div>
 
                     <!-- <div>
                         <label class="block text-sm font-semibold text-gray-700">Status</label>
@@ -649,5 +660,33 @@ window.appData = {
 })();
 </script>
 <script src="js/loading.js"></script>
+<script>
+(function () {
+    const fileInput  = document.getElementById('attachment-file');
+    const b64Input   = document.getElementById('attachment-b64');
+    const preview    = document.getElementById('attachment-preview');
+    const filenameEl = document.getElementById('attachment-filename');
+    const clearBtn   = document.getElementById('attachment-clear');
+
+    fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            b64Input.value = e.target.result;          // full data URI: data:...;base64,...
+            filenameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            preview.classList.remove('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    clearBtn.addEventListener('click', function () {
+        fileInput.value = '';
+        b64Input.value  = '';
+        preview.classList.add('hidden');
+        filenameEl.textContent = '';
+    });
+})();
+</script>
 </body>
 </html>

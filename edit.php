@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fields = ['customer_name','tin_no','order_date','address','billing_address',
                'contact_details','payment_terms','contact_person','required_delivery_date',
                'deliver_to','remarks','special_instruction','status',
-               'lot_no','barangay','municipality','province','region'];
+               'lot_no','barangay','municipality','province','region', 'attachment'];
     foreach ($fields as $f) $data[$f] = $_POST[$f] ?? $data[$f];
     $data['is_new'] = isset($_POST['is_new']) ? 1 : 0;
 
@@ -92,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 lot_no=?, barangay=?, municipality=?, province=?, region=?,
                 contact_details=?, payment_terms=?, contact_person=?, required_delivery_date=?,
                 deliver_to=?, is_new=?, remarks=?, special_instruction=?, status=?,
-                total_amount=?, updated_by=?, updated_at=NOW() WHERE id=?")
+                attachment=?, total_amount=?, updated_by=?, updated_at=NOW() WHERE id=?")
             ->execute([
                 $data['customer_name'], $data['tin_no'], $data['order_date'],
                 $data['address'], $data['billing_address'],
@@ -100,6 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['contact_details'], $data['payment_terms'], $data['contact_person'],
                 $data['required_delivery_date'] ?: null, $data['deliver_to'],
                 $data['is_new'], $data['remarks'], $data['special_instruction'], $data['status'],
+                $data['attachment'],
                 $total, $_SESSION['user_id'], $id
             ]);
 
@@ -540,7 +541,72 @@ $currentStatus = $data['status'];
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
+                    <div class="xl:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700">Attachment</label>
 
+                        <?php if (!empty($data['attachment'])): ?>
+                        <div id="attachment-current" class="mb-1 text-xs text-gray-500 flex items-center gap-2">
+                            <i class="bi bi-paperclip"></i>
+                            <span>Current attachment saved</span>
+                            <button type="button" id="attachment-remove-current"
+                                class="text-red-400 hover:text-red-600 text-xs">✕ Remove</button>
+                        </div>
+                        <?php endif; ?>
+
+                        <input type="file" id="attachment-file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
+                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 bg-white">
+                        <input type="hidden" name="attachment" id="attachment-b64"
+                            value="<?= htmlspecialchars($data['attachment'] ?? '') ?>">
+                        <div id="attachment-preview" class="mt-1 text-xs text-gray-500 hidden">
+                            <span id="attachment-filename"></span>
+                            <button type="button" id="attachment-clear" class="ml-2 text-red-400 hover:text-red-600">✕ Remove</button>
+                        </div>
+                    </div>
+                    <div class="col-span-4">
+                        <?php if (!empty($data['attachment'])): ?>
+                            <?php
+                                $attachment = $data['attachment'];
+                                $mime = '';
+                                if (preg_match('/^data:([a-zA-Z0-9\/+\-]+);base64,/', $attachment, $matches)) {
+                                    $mime = $matches[1];
+                                }
+                                $isImage = in_array($mime, ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp']);
+                                $isPdf   = $mime === 'application/pdf';
+                            ?>
+
+                            <div class="mt-2 border border-gray-200 rounded overflow-hidden">
+
+                                <?php if ($isImage): ?>
+                                    <img src="<?= htmlspecialchars($attachment) ?>"
+                                        alt="Current Attachment"
+                                        class="max-w-full"
+                                        style="max-height: 400px; object-fit: contain;">
+
+                                <?php elseif ($isPdf): ?>
+                                    <iframe src="<?= htmlspecialchars($attachment) ?>"
+                                            class="w-full"
+                                            style="height: 500px;"
+                                            title="PDF Attachment">
+                                    </iframe>
+
+                                <?php else: ?>
+                                    <div class="p-3 text-sm text-gray-500 flex items-center gap-2">
+                                        <i class="bi bi-file-earmark text-gray-400 text-lg"></i>
+                                        File attached — not previewable in browser.
+                                    </div>
+                                <?php endif; ?>
+
+                                <div class="px-3 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                                    <span class="text-xs text-gray-400">Current attachment</span>
+                                    <a href="<?= htmlspecialchars($attachment) ?>"
+                                    download="attachment"
+                                    class="text-xs text-blue-500 hover:text-blue-700 flex items-center gap-1">
+                                        <i class="bi bi-download"></i> Download
+                                    </a>
+                                </div>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </div>
             </div>
         </div>
@@ -796,5 +862,41 @@ window.appConfig = {
 })();
 </script>
 <script src="js/loading.js"></script>
+<script>
+(function () {
+    const fileInput     = document.getElementById('attachment-file');
+    const b64Input      = document.getElementById('attachment-b64');
+    const preview       = document.getElementById('attachment-preview');
+    const filenameEl    = document.getElementById('attachment-filename');
+    const clearBtn      = document.getElementById('attachment-clear');
+    const currentDiv    = document.getElementById('attachment-current');
+    const removeCurrentBtn = document.getElementById('attachment-remove-current');
+
+    fileInput.addEventListener('change', function () {
+        const file = this.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            b64Input.value = e.target.result;
+            filenameEl.textContent = file.name + ' (' + (file.size / 1024).toFixed(1) + ' KB)';
+            preview.classList.remove('hidden');
+            if (currentDiv) currentDiv.classList.add('hidden');
+        };
+        reader.readAsDataURL(file);
+    });
+
+    clearBtn && clearBtn.addEventListener('click', function () {
+        fileInput.value = '';
+        b64Input.value  = '';
+        preview.classList.add('hidden');
+        filenameEl.textContent = '';
+    });
+
+    removeCurrentBtn && removeCurrentBtn.addEventListener('click', function () {
+        b64Input.value = '';
+        currentDiv.classList.add('hidden');
+    });
+})();
+</script>
 </body>
 </html>
