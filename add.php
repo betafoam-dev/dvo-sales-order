@@ -293,14 +293,14 @@ if (empty($existingItems)) $existingItems = [[]];
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
-                <div class="grid grid-cols-1 xl:grid-cols-2 xl:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-2">
 
                     <div>
                         <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
                         <input type="date" name="order_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['order_date']) ?>" required>
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="xl:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
                         <div class="sd-wrapper" id="customer-wrapper">
                             <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
@@ -336,12 +336,12 @@ if (empty($existingItems)) $existingItems = [[]];
                             value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
                     </div>
 
-                    <div>
+                    <div class="xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">TIN No.</label>
                         <input type="text" name="tin_no" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['tin_no']) ?>">
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="xl:col-span-4">
                         <label class="block text-sm font-semibold text-gray-700">
                             Delivery Address
                             <label class="inline-flex items-center gap-1 ml-3 font-normal text-xs text-gray-500 cursor-pointer">
@@ -482,7 +482,7 @@ if (empty($existingItems)) $existingItems = [[]];
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
-                    <div class="xl:col-span-2">
+                    <div class="xl:col-span-4">
                         <label class="block text-sm font-semibold text-gray-700">Attachment</label>
                         <input type="file" id="attachment-file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
                             class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">

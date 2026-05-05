@@ -373,14 +373,14 @@ $currentStatus = $data['status'];
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 mb-4">
             <div class="p-2">
                 <div class="text-xs text-center font-semibold uppercase tracking-widest text-gray-400 border-b-2 border-gray-100 pb-2 mb-2">Order Information</div>
-                <div class="grid grid-cols-1 xl:grid-cols-2 xl:grid-cols-4 gap-2">
+                <div class="grid grid-cols-1 xl:grid-cols-4 gap-2">
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
                         <input type="date" name="order_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars(substr($data['order_date'],0,10)) ?>" required>
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
                         <div class="sd-wrapper" id="customer-wrapper">
                             <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
@@ -401,7 +401,7 @@ $currentStatus = $data['status'];
                         </div>
                     </div>
 
-                    <div class="hidden">
+                    <div class="col-span-1 hidden">
                         <label class="block text-sm font-semibold text-gray-700">Is New Customer?</label>
                         <label class="flex items-center gap-2 mt-2 cursor-pointer">
                             <input type="checkbox" name="is_new" value="1" <?= $data['is_new'] ? 'checked' : '' ?> class="w-4 h-4 text-yellow-500 border-gray-300 rounded">
@@ -409,27 +409,27 @@ $currentStatus = $data['status'];
                         </label>
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Billing Address</label>
                         <input type="text" name="billing_address" id="billing-address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">TIN No.</label>
                         <input type="text" name="tin_no" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['tin_no']) ?>">
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Delivery Address</label>
                         <input type="text" name="address" id="address-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" value="<?= htmlspecialchars($data['address']) ?>" readonly>
                     </div>
 
-                    <div>
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Address Line <span class="text-sm text-gray-500">(Lot, Blk, House #, Street)</span></label>
                         <input type="text" name="lot_no" id="lot-no-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['lot_no'] ?? '') ?>">
                     </div>
 
-                    <div class="hidden">
+                    <div class="col-span-1 hidden">
                         <label class="block text-sm font-semibold text-gray-700">Region</label>
                         <div class="sd-wrapper" id="region-wrapper">
                             <input type="text" class="sd-input" id="region-display" placeholder="-- Select Region --" readonly value="<?= htmlspecialchars($data['region']) ?>">
@@ -445,7 +445,7 @@ $currentStatus = $data['status'];
                         </div>
                     </div>
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Province/City</label>
                         <div class="sd-wrapper" id="province-wrapper">
                             <input type="text" class="sd-input text-sm" id="province-display" placeholder="-- Select Province --" readonly value="<?= htmlspecialchars($data['province']) ?>">
@@ -461,7 +461,7 @@ $currentStatus = $data['status'];
                         </div>
                     </div>
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Municipality</label>
                         <div class="sd-wrapper text-sm" id="municipality-wrapper">
                             <input type="text" class="sd-input text-sm" id="municipality-display" placeholder="-- Select Municipality --" readonly value="<?= htmlspecialchars($data['municipality']) ?>">
@@ -486,7 +486,7 @@ $currentStatus = $data['status'];
                         </div>
                     </div>
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Barangay</label>
                         <div class="sd-wrapper text-sm" id="barangay-wrapper">
                             <input type="text" class="sd-input text-sm" id="barangay-display" placeholder="Type to search barangay..." readonly value="<?= htmlspecialchars($data['barangay']) ?>">
@@ -500,17 +500,17 @@ $currentStatus = $data['status'];
                         </div>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700">Contact Person</label>
-                        <input type="text" name="contact_person" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['contact_person']) ?>">
-                    </div>
-
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Contact Details</label>
                         <input type="text" name="contact_details" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['contact_details']) ?>">
                     </div>
 
-                    <div>
+                    <div class="col-span-1 xl:col-span-2">
+                        <label class="block text-sm font-semibold text-gray-700">Contact Person</label>
+                        <input type="text" name="contact_person" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['contact_person']) ?>">
+                    </div>
+
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700 mb-1">Payment Terms</label>
                         <select name="payment_terms" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300 bg-white">
                             <option value="">-- Select --</option>
@@ -527,21 +527,21 @@ $currentStatus = $data['status'];
                         <input type="text" name="deliver_to" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars($data['deliver_to']) ?>">
                     </div>-->
 
-                    <div>
+                    <div class="col-span-1">
                         <label class="block text-sm font-semibold text-gray-700">Required Delivery Date</label>
                         <input type="date" name="required_delivery_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300" value="<?= htmlspecialchars(substr($data['required_delivery_date'] ?? '',0,10)) ?>">
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Remarks</label>
                         <textarea name="remarks" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['remarks']) ?></textarea>
                     </div>
 
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
                         <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-yellow-400 focus:ring-1 focus:ring-yellow-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
-                    <div class="xl:col-span-2">
+                    <div class="col-span-1 xl:col-span-4">
                         <label class="block text-sm font-semibold text-gray-700">Attachment</label>
 
                         <?php if (!empty($data['attachment'])): ?>
@@ -562,7 +562,7 @@ $currentStatus = $data['status'];
                             <button type="button" id="attachment-clear" class="ml-2 text-red-400 hover:text-red-600">✕ Remove</button>
                         </div>
                     </div>
-                    <div class="col-span-4">
+                    <div class="col-span-1 xl:col-span-4">
                         <?php if (!empty($data['attachment'])): ?>
                             <?php
                                 $attachment = $data['attachment'];
