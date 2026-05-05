@@ -126,7 +126,7 @@ function initInvSD(wrapper) {
         display.value = item.dataset.label;
         hidden.value = item.dataset.value;
         row.querySelector('.item-code').value = item.dataset.code;
-        row.querySelector('.item-desc').value = item.dataset.name;
+        row.querySelector('.item-name').value = item.dataset.name;
         row.querySelector('.item-uom').value = item.dataset.uom;
         closeDropdown();
         recalcRow(row);
@@ -139,7 +139,7 @@ function initInvSD(wrapper) {
             display.value = '';
             hidden.value = '';
             row.querySelector('.item-code').value = '';
-            row.querySelector('.item-desc').value = '';
+            row.querySelector('.item-name').value = '';
             row.querySelector('.item-uom').value = '';
             closeDropdown();
             recalcRow(row);
