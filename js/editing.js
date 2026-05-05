@@ -22,15 +22,20 @@ function initSD(wrapperId, onSelect) {
 
     function filterItems(q) {
         const lower = q.toLowerCase();
-        let vis = 0;
+        let visCount = 0;
         list.querySelectorAll('.sd-item').forEach(item => {
-            const text = (item.firstChild?.nodeType === 3 ? item.firstChild.textContent : item.textContent).toLowerCase();
-            const show = !q || text.includes(lower);
+            const searchable = [
+                item.dataset.label ?? '',
+                item.dataset.code ?? '',
+                item.dataset.description ?? '',
+                item.dataset.name ?? '',
+            ].join(' ').toLowerCase();
+            const show = !q || searchable.includes(lower);
             item.style.display = show ? '' : 'none';
-            if (show) vis++;
+            if (show) visCount++;
         });
         let emptyEl = list.querySelector('.sd-empty');
-        if (vis === 0) {
+        if (visCount === 0) {
             if (!emptyEl) { emptyEl = document.createElement('div'); emptyEl.className = 'sd-empty'; emptyEl.textContent = 'No results'; list.appendChild(emptyEl); }
             emptyEl.style.display = '';
         } else if (emptyEl) emptyEl.style.display = 'none';
