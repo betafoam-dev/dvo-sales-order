@@ -12,7 +12,7 @@ $offset = ($page - 1) * $limit;
 $where = "WHERE i.deleted_at IS NULL";
 $params = [];
 if ($search !== '') {
-    $where .= " AND (i.stock_code LIKE ? OR i.stock_name LIKE ?)";
+    $where .= " AND (i.stock_code LIKE ? OR i.stock_description LIKE ?)";
     $s = "%$search%";
     $params = [$s, $s];
 }
@@ -22,7 +22,7 @@ $total->execute($params);
 $totalRows = (int)$total->fetchColumn();
 $totalPages = max(1, ceil($totalRows / $limit));
 
-$sql = "SELECT i.id, i.stock_code, i.stock_name, i.stock_description, i.uom,
+$sql = "SELECT i.id, i.stock_code, i.stock_description, i.stock_description, i.uom,
             c.category_name AS category_name,
             wi.item_qty, wi.min_qty, wi.max_qty, wi.is_stocking, wi.is_active
         FROM inventories i
@@ -98,7 +98,7 @@ $inventories = $stmt->fetchAll();
                         <tr>
                             <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">#</th>
                             <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Stock Code</th>
-                            <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Stock Name</th>
+                            <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Stock Description</th>
                             <th class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-[9px] text-center xl:xl:text-xs text-[10px] font-semibold uppercase whitespace-nowrap text-gray-500">Qty on Hand</th>
                         </tr>
                     </thead>
@@ -118,7 +118,7 @@ $inventories = $stmt->fetchAll();
                             <tr class="hover:bg-gray-50 transition">
                                 <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-400 xl:text-xs text-[5px] whitespace-nowrap"><?= $offset + $idx + 1 ?></td>
                                 <td class="xl:px-3 px-1 text-[8px] xl:text-base py-0.5 xl:py-2.5 whitespace-nowrap"><span class="fw-semibold text-primary"><?= htmlspecialchars($inv['stock_code']) ?></span></td>
-                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($inv['stock_name']) ?></td>
+                                <td class="xl:px-3 px-1 py-0.5 xl:py-2.5 text-gray-700 text-[8px] xl:text-base whitespace-nowrap"><?= htmlspecialchars($inv['stock_description']) ?></td>
                                 <td class="text-center text-[8px] xl:text-base whitespace-nowrap qty-cell <?= $qtyClass ?>">
                                     <?php if ($qty !== null): ?>
                                         <?= number_format($qty, 2) ?>
