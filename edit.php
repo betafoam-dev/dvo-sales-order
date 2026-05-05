@@ -640,7 +640,7 @@ $currentStatus = $data['status'];
                                                 data-description="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
                                                 data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>">
-                                                <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>
+                                                <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
