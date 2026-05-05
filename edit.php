@@ -636,8 +636,7 @@ $currentStatus = $data['status'];
                                             <div class="sd-item"
                                                 data-value="<?= $inv['id'] ?>"
                                                 data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
-                                                data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
-                                                data-description="<?= htmlspecialchars($inv['stock_description']) ?>"
+                                                data-name="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
                                                 data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>">
                                                 <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>
