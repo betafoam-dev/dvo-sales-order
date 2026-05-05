@@ -10,7 +10,7 @@ const props = defineProps({
     descriptionField:     { type: String, default: null },
     secondDescriptionField: { type: String, default: null },
     nameDescriptionField: { type: String, default: null },
-    searchFields:         { type: Array, default: () => ['name', 'stock_description'] },
+    searchFields:         { type: Array, default: () => ['description'] },
     placeholder:          { type: String, default: '- ' },
     multiple:             { type: Boolean, default: false },
     readonly:             { type: Boolean, default: false },

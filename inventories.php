@@ -22,7 +22,7 @@ $total->execute($params);
 $totalRows = (int)$total->fetchColumn();
 $totalPages = max(1, ceil($totalRows / $limit));
 
-$sql = "SELECT i.id, i.stock_code, i.stock_description, i.stock_description, i.uom,
+$sql = "SELECT i.id, i.stock_code, i.stock_description, i.uom,
             c.category_name AS category_name,
             wi.item_qty, wi.min_qty, wi.max_qty, wi.is_stocking, wi.is_active
         FROM inventories i

@@ -44,7 +44,7 @@ $siStmt = $conn->prepare("SELECT * FROM sales_order_items WHERE sales_order_id =
 $siStmt->execute([$id]);
 $savedItems = $siStmt->fetchAll();
 
-$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll(PDO::FETCH_ASSOC);
+$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll(PDO::FETCH_ASSOC);
 $uoms              = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 $customers         = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
 $paymentTerms      = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
@@ -637,7 +637,6 @@ $currentStatus = $data['status'];
                                                 data-value="<?= $inv['id'] ?>"
                                                 data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
                                                 data-name="<?= htmlspecialchars($inv['stock_description']) ?>"
-                                                data-description="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
                                                 data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>">
                                                 <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>
