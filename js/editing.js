@@ -255,7 +255,7 @@ const invSDOptions = Object.values(inventories).map(inv =>
     `<div class="sd-item"
           data-value="${esc(inv.id)}"
           data-code="${esc(inv.stock_code)}"
-          data-name="${esc(inv.stock_name)}"
+          data-name="${esc(inv.stock_description)}"
           data-description="${esc(inv.stock_description)}"
           data-uom="${esc(inv.uom)}"
           data-label="${esc(inv.stock_code)} - ${esc(inv.stock_description)}">
