@@ -283,12 +283,11 @@ const invSDOptions = Object.values(inventories).map(inv =>
     </div>`
 ).join('');
 
+// ── Add Item: builds a div card row (your layout) and fires ss:init-row for partner's SearchableSelect ──
 document.getElementById('add-row').addEventListener('click', function () {
     const row = document.createElement('div');
     row.className = 'item-row';
     row.innerHTML = `
-        <input type="hidden" name="items[${rowIndex}][item_id]" value="">
-
         <div class="item-field">
             <label class="item-label">Item</label>
             <input type="hidden" name="items[${rowIndex}][inventory_id]" class="inv-id-value" value="">
@@ -339,15 +338,13 @@ document.getElementById('add-row').addEventListener('click', function () {
             </button>
         </div>
     `;
-    
-    const itemsBody = document.getElementById('items-body');
-    itemsBody.appendChild(row);
-    
-    // Initialize the new row's inventory select
+    document.getElementById('items-body').appendChild(row);
     attachRowEvents(row);
-    
+
+    // Notify partner's SearchableSelect initializer about the new row
+    // document.getElementById('add-row').dispatchEvent(new CustomEvent('ss:init-row', { detail: row }));
+
     rowIndex++;
-    recalcTotal();
 });
 
 recalcTotal();
