@@ -533,7 +533,7 @@ if (empty($existingItems)) $existingItems = [[]];
                                                 data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
                                                 data-description="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
-                                                data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_name']) ?>">
+                                                data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>">
                                                 <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>
                                             </div>
                                         <?php endforeach; ?>

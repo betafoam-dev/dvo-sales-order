@@ -244,7 +244,7 @@ const invSDOptions = Object.values(inventories).map(inv =>
           data-name="${inv.stock_name}"
           data-description="${inv.stock_description}"
           data-uom="${inv.uom}"
-          data-label="${inv.stock_code} - ${inv.stock_name}">
+          data-label="${inv.stock_code} - ${inv.stock_description}">
         ${inv.stock_code} - ${inv.stock_description}
     </div>`
 ).join('');
