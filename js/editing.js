@@ -28,7 +28,6 @@ function initSD(wrapperId, onSelect) {
                 item.dataset.label ?? '',
                 item.dataset.code ?? '',
                 item.dataset.description ?? '',
-                item.dataset.name ?? '',
             ].join(' ').toLowerCase();
             const show = !q || searchable.includes(lower);
             item.style.display = show ? '' : 'none';
