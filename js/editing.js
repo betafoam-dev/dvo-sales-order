@@ -4,6 +4,14 @@ const saved = window.appConfig.saved;
 let rowIndex = window.appConfig.rowIndex;
 const editId = window.appConfig.editId;
 
+function esc(str) {
+    return String(str ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 function initSD(wrapperId, onSelect) {
     const wrapper = document.getElementById(wrapperId);
     const display = wrapper.querySelector('.sd-input');
@@ -231,7 +239,9 @@ function attachRowEvents(row) {
 
 document.querySelectorAll('.item-row').forEach(row => { attachRowEvents(row); recalcRow(row); });
 
-const uomOptions = uoms.map(u => `<option value="${u.uom_name}">${u.uom_name}</option>`).join('');
+const uomOptions = uoms.map(u =>
+    `<option value="${esc(u.uom_name)}">${esc(u.uom_name)}</option>`
+).join('');
 // const invOptions = Object.values(inventories).map(inv =>
 //     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
 // ).join('');
