@@ -247,7 +247,7 @@ const uomOptions = uoms.map(u =>
     `<option value="${esc(u.uom_name)}">${esc(u.uom_name)}</option>`
 ).join('');
 // const invOptions = Object.values(inventories).map(inv =>
-//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
+//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_description}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_description}</option>`
 // ).join('');
 
 const invSDOptions = Object.values(inventories).map(inv =>

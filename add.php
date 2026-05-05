@@ -69,9 +69,9 @@ function generateUuid() {
         mt_rand(0,0xffff), mt_rand(0,0xffff), mt_rand(0,0xffff)));
 }
 
-$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.stock_description, i.uom, COALESCE(wi.item_qty, 0) AS qty_on_hand
+$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.stock_description, i.uom, COALESCE(wi.item_qty, 0) AS qty_on_hand
     FROM inventories i LEFT JOIN warehouse_inventories wi ON wi.inventory_id = i.id AND wi.deleted_at IS NULL
-    WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
+    WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
 
 $uoms      = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 $customers = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
@@ -530,7 +530,7 @@ if (empty($existingItems)) $existingItems = [[]];
                                             <div class="sd-item"
                                                 data-value="<?= $inv['id'] ?>"
                                                 data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
-                                                data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
+                                                data-name="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-description="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
                                                 data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>">
