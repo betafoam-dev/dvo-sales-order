@@ -238,13 +238,13 @@ const uomOptions = uoms.map(u => `<option value="${u.uom_name}">${u.uom_name}</o
 
 const invSDOptions = Object.values(inventories).map(inv =>
     `<div class="sd-item"
-          data-value="${inv.id}"
-          data-code="${inv.stock_code}"
-          data-name="${inv.stock_name}"
-          data-description="${inv.stock_description}"
-          data-uom="${inv.uom}"
-          data-label="${inv.stock_code} - ${inv.stock_description}">
-        ${inv.stock_code} - ${inv.stock_description}
+          data-value="${esc(inv.id)}"
+          data-code="${esc(inv.stock_code)}"
+          data-name="${esc(inv.stock_name)}"
+          data-description="${esc(inv.stock_description)}"
+          data-uom="${esc(inv.uom)}"
+          data-label="${esc(inv.stock_code)} - ${esc(inv.stock_description)}">
+        ${esc(inv.stock_code)} - ${esc(inv.stock_description)}
     </div>`
 ).join('');
 
