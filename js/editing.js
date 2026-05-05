@@ -126,11 +126,32 @@ function initInvSD(wrapper) {
         display.value = item.dataset.label;
         hidden.value = item.dataset.value;
         row.querySelector('.item-code').value = item.dataset.code;
-        row.querySelector('.item-desc').value = item.dataset.desc;
+        row.querySelector('.item-desc').value = item.dataset.name;
         row.querySelector('.item-uom').value = item.dataset.uom;
         closeDropdown();
         recalcRow(row);
     });
+    
+    // Add keyboard support for the display input
+    display.addEventListener('keydown', e => {
+        if (e.key === 'Escape') { closeDropdown(); return; }
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+            display.value = '';
+            hidden.value = '';
+            row.querySelector('.item-code').value = '';
+            row.querySelector('.item-desc').value = '';
+            row.querySelector('.item-uom').value = '';
+            closeDropdown();
+            recalcRow(row);
+            return;
+        }
+        if (e.key.length === 1) { 
+            openDropdown(); 
+            search.value += e.key; 
+            filterItems(search.value); 
+        }
+    });
+    
     document.addEventListener('click', e => { if (!wrapper.contains(e.target)) closeDropdown(); });
 }
 
@@ -262,7 +283,6 @@ const invSDOptions = Object.values(inventories).map(inv =>
     </div>`
 ).join('');
 
-// ── Add Item: builds a div card row and calls initInvSelectRow for SearchableSelect ──
 document.getElementById('add-row').addEventListener('click', function () {
     const row = document.createElement('div');
     row.className = 'item-row';
@@ -319,13 +339,15 @@ document.getElementById('add-row').addEventListener('click', function () {
             </button>
         </div>
     `;
-    document.getElementById('items-body').appendChild(row);
+    
+    const itemsBody = document.getElementById('items-body');
+    itemsBody.appendChild(row);
+    
+    // Initialize the new row's inventory select
     attachRowEvents(row);
-
-    // Init SearchableSelect on the new div row
-    // if (typeof initInvSelectRow === 'function') initInvSelectRow(row);
-
+    
     rowIndex++;
+    recalcTotal();
 });
 
 recalcTotal();
