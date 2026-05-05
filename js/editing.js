@@ -4,14 +4,6 @@ const saved = window.appConfig.saved;
 let rowIndex = window.appConfig.rowIndex;
 const editId = window.appConfig.editId;
 
-function esc(str) {
-    return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
 function initSD(wrapperId, onSelect) {
     const wrapper = document.getElementById(wrapperId);
     const display = wrapper.querySelector('.sd-input');
@@ -22,19 +14,15 @@ function initSD(wrapperId, onSelect) {
 
     function filterItems(q) {
         const lower = q.toLowerCase();
-        let visCount = 0;
+        let vis = 0;
         list.querySelectorAll('.sd-item').forEach(item => {
-            const searchable = [
-                item.dataset.label ?? '',
-                item.dataset.code ?? '',
-                item.dataset.description ?? '',
-            ].join(' ').toLowerCase();
-            const show = !q || searchable.includes(lower);
+            const text = (item.firstChild?.nodeType === 3 ? item.firstChild.textContent : item.textContent).toLowerCase();
+            const show = !q || text.includes(lower);
             item.style.display = show ? '' : 'none';
-            if (show) visCount++;
+            if (show) vis++;
         });
         let emptyEl = list.querySelector('.sd-empty');
-        if (visCount === 0) {
+        if (vis === 0) {
             if (!emptyEl) { emptyEl = document.createElement('div'); emptyEl.className = 'sd-empty'; emptyEl.textContent = 'No results'; list.appendChild(emptyEl); }
             emptyEl.style.display = '';
         } else if (emptyEl) emptyEl.style.display = 'none';
@@ -131,27 +119,6 @@ function initInvSD(wrapper) {
         closeDropdown();
         recalcRow(row);
     });
-    
-    // Add keyboard support for the display input
-    display.addEventListener('keydown', e => {
-        if (e.key === 'Escape') { closeDropdown(); return; }
-        if (e.key === 'Backspace' || e.key === 'Delete') {
-            display.value = '';
-            hidden.value = '';
-            row.querySelector('.item-code').value = '';
-            row.querySelector('.item-desc').value = '';
-            row.querySelector('.item-uom').value = '';
-            closeDropdown();
-            recalcRow(row);
-            return;
-        }
-        if (e.key.length === 1) { 
-            openDropdown(); 
-            search.value += e.key; 
-            filterItems(search.value); 
-        }
-    });
-    
     document.addEventListener('click', e => { if (!wrapper.contains(e.target)) closeDropdown(); });
 }
 
@@ -264,25 +231,23 @@ function attachRowEvents(row) {
 
 document.querySelectorAll('.item-row').forEach(row => { attachRowEvents(row); recalcRow(row); });
 
-const uomOptions = uoms.map(u =>
-    `<option value="${esc(u.uom_name)}">${esc(u.uom_name)}</option>`
-).join('');
+const uomOptions = uoms.map(u => `<option value="${u.uom_name}">${u.uom_name}</option>`).join('');
 // const invOptions = Object.values(inventories).map(inv =>
-//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_description}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_description}</option>`
+//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
 // ).join('');
 
 const invSDOptions = Object.values(inventories).map(inv =>
     `<div class="sd-item"
-          data-value="${esc(inv.id)}"
-          data-code="${esc(inv.stock_code)}"
-          data-desc="${esc(inv.stock_description)}"
-          data-description="${esc(inv.stock_description)}"
-          data-uom="${esc(inv.uom)}"
-          data-label="${esc(inv.stock_code)} - ${esc(inv.stock_description)}">
-        ${esc(inv.stock_code)} - ${esc(inv.stock_description)}
+          data-value="${inv.id}"
+          data-code="${inv.stock_code}"
+          data-name="${inv.stock_name}"
+          data-uom="${inv.uom}"
+          data-label="${inv.stock_code} - ${inv.stock_name}">
+        ${inv.stock_code} - ${inv.stock_name}
     </div>`
 ).join('');
 
+// ── Add Item: builds a div card row and calls initInvSelectRow for SearchableSelect ──
 document.getElementById('add-row').addEventListener('click', function () {
     const row = document.createElement('div');
     row.className = 'item-row';
@@ -339,15 +304,13 @@ document.getElementById('add-row').addEventListener('click', function () {
             </button>
         </div>
     `;
-    
-    const itemsBody = document.getElementById('items-body');
-    itemsBody.appendChild(row);
-    
-    // Initialize the new row's inventory select
+    document.getElementById('items-body').appendChild(row);
     attachRowEvents(row);
-    
+
+    // Init SearchableSelect on the new div row
+    // if (typeof initInvSelectRow === 'function') initInvSelectRow(row);
+
     rowIndex++;
-    recalcTotal();
 });
 
 recalcTotal();

@@ -3,14 +3,6 @@ const uoms = window.appData.uoms;
 const saved = window.appData.saved;
 let rowIndex = window.appData.rowIndex;
 
-function esc(str) {
-    return String(str ?? '')
-        .replace(/&/g, '&amp;')
-        .replace(/"/g, '&quot;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;');
-}
-
 function initSD(wrapperId, onSelect) {
     const wrapper = document.getElementById(wrapperId);
     const display = wrapper.querySelector('.sd-input');
@@ -240,21 +232,19 @@ function attachRowEvents(row) {
 
 document.querySelectorAll('.item-row').forEach(row => { attachRowEvents(row); recalcRow(row); });
 
-const uomOptions = uoms.map(u =>
-    `<option value="${esc(u.uom_name)}">${esc(u.uom_name)}</option>`
-).join('');
+const uomOptions = uoms.map(u => `<option value="${u.uom_name}">${u.uom_name}</option>`).join('');
 // const invOptions = Object.values(inventories).map(inv =>
-//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_description}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_description}</option>`
+//     `<option value="${inv.id}" data-code="${inv.stock_code}" data-name="${inv.stock_name}" data-uom="${inv.uom}">${inv.stock_code} - ${inv.stock_name}</option>`
 // ).join('');
 
 const invSDOptions = Object.values(inventories).map(inv =>
     `<div class="sd-item"
-          data-value="${esc(inv.id)}"
-          data-code="${esc(inv.stock_code)}"
-          data-name="${esc(inv.stock_description)}"
-          data-uom="${esc(inv.uom)}"
-          data-label="${esc(inv.stock_code)} - ${esc(inv.stock_description)}">
-        ${esc(inv.stock_code)} - ${esc(inv.stock_description)}
+          data-value="${inv.id}"
+          data-code="${inv.stock_code}"
+          data-name="${inv.stock_name}"
+          data-uom="${inv.uom}"
+          data-label="${inv.stock_code} - ${inv.stock_name}">
+        ${inv.stock_code} - ${inv.stock_name}
     </div>`
 ).join('');
 
