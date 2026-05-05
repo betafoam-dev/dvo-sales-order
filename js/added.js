@@ -121,7 +121,7 @@ function initInvSD(wrapper) {
         display.value = item.dataset.label;
         hidden.value = item.dataset.value;
         row.querySelector('.item-code').value = item.dataset.code;
-        row.querySelector('.item-desc').value = item.dataset.name;
+        row.querySelector('.item-desc').value = item.dataset.desc;
         row.querySelector('.item-uom').value = item.dataset.uom;
         closeDropdown();
         recalcRow(row);
@@ -253,7 +253,7 @@ const invSDOptions = Object.values(inventories).map(inv =>
     `<div class="sd-item"
           data-value="${esc(inv.id)}"
           data-code="${esc(inv.stock_code)}"
-          data-name="${esc(inv.stock_description)}"
+          data-desc="${esc(inv.stock_description)}"
           data-uom="${esc(inv.uom)}"
           data-label="${esc(inv.stock_code)} - ${esc(inv.stock_description)}">
         ${esc(inv.stock_code)} - ${esc(inv.stock_description)}
