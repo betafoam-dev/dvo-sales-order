@@ -44,7 +44,9 @@ $siStmt = $conn->prepare("SELECT * FROM sales_order_items WHERE sales_order_id =
 $siStmt->execute([$id]);
 $savedItems = $siStmt->fetchAll();
 
-$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll(PDO::FETCH_ASSOC);
+$inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom 
+    FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")
+    ->fetchAll(PDO::FETCH_ASSOC);
 $uoms              = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 $customers         = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
 $paymentTerms      = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
@@ -804,7 +806,17 @@ $currentStatus = $data['status'];
 
 <script>
 window.appConfig = {
-    inventories: <?= json_encode(array_combine(array_column($inventories, 'id'), $inventories)) ?>,
+    inventories: <?= json_encode(
+        array_column(
+            array_map(fn($i) => [
+                'id'                => $i['id'],
+                'stock_code'        => $i['stock_code'],
+                'stock_description' => $i['stock_description'],
+                'uom'               => $i['uom'],
+            ], $inventories),
+            null, 'id'
+        )
+    ) ?>,
     uoms: <?= json_encode($uoms) ?>,
     saved: {
         region:       <?= json_encode($data['region']) ?>,
