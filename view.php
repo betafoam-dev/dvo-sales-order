@@ -243,9 +243,14 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
                         <p class="text-sm">₱<?= number_format($item['unit_price'], 2) ?></p>
                     </div>
                     <div class="grid grid-cols-1">
+                        <p class="font-bold">Status:</p>
+                        <p class="text-xs"><?= htmlspecialchars($item['status'] ?? 'pending') ?></p>
+                    </div>
+                    <div class="grid grid-cols-1">
                         <p class="font-bold">Amount:</p>
                         <p class="text-sm">₱<?= number_format($item['amount'], 2) ?></p>
                     </div>
+                    
                 </div>
             </div>
             <?php endforeach; ?>
