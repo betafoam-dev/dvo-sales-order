@@ -74,7 +74,17 @@ $inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom, COA
     WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
 
 $uoms      = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
-$customers = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
+
+$userName = $_SESSION['user_name'];
+
+$customers = $conn->prepare("
+    SELECT id, full_name, address 
+    FROM customers 
+    WHERE LOWER(sales_person) LIKE LOWER(?)
+    ORDER BY full_name
+");
+$customers->execute(['%' . $userName . '%']);
+$customers = $customers->fetchAll();
 $regions   = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 $paymentTerms = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
 

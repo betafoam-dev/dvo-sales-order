@@ -46,7 +46,16 @@ $savedItems = $siStmt->fetchAll();
 
 $inventories       = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
 $uoms              = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
-$customers         = $conn->query("SELECT id, full_name, address FROM customers ORDER BY full_name")->fetchAll();
+$userName = $_SESSION['user_name'];
+
+$customers = $conn->prepare("
+    SELECT id, full_name, address 
+    FROM customers 
+    WHERE LOWER(sales_person) LIKE LOWER(?)
+    ORDER BY full_name
+");
+$customers->execute(['%' . $userName . '%']);
+$customers = $customers->fetchAll();
 $paymentTerms      = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
 $regions           = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 $allProvinces      = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name")->fetchAll(PDO::FETCH_ASSOC);
