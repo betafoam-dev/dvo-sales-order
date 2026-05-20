@@ -1,4 +1,4 @@
-<!-- BoomBox.vue - complete rewrite of the slow parts -->
+< !--BoomBox.vue - complete rewrite of the slow parts-- >
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { Check, ChevronsUpDown, X } from 'lucide-vue-next'
@@ -125,7 +125,7 @@ const onClickOutside = (e) => {
             type="button"
             @click="open ? closeDropdown() : openDropdown()"
             :disabled="disabled"
-            class="flex items-center justify-between w-full px-3 py-2 text-sm bg-white border border-black rounded hover:bg-gray-50 focus:outline-none"
+            class="flex items-center justify-between w-full px-3 py-2 text-base bg-white border border-black rounded hover:bg-gray-50 focus:outline-none"
             :class="{
                 'opacity-60 cursor-not-allowed bg-gray-50': readonly || disabled,
             }"
@@ -145,72 +145,72 @@ const onClickOutside = (e) => {
                 </span>
             </template>
 
-            <!-- Multiple mode display -->
+            <!--Multiple mode display-- >
             <template v-else>
                 <div class="flex flex-wrap gap-1 overflow-hidden">
                     <template v-if="selectedItems.length">
                         <span
                             v-for="item in selectedItems.slice(0, 5)"
                             :key="item.id"
-                            class="flex items-center gap-1 px-1.5 py-0.5 text-xs bg-gray-100 rounded"
+                            class="flex items-center gap-1 px-1.5 py-0.5 text-sm bg-gray-100 rounded"
                         >
                             {{ item[labelField] }}
                             <X class="w-3 h-3 cursor-pointer hover:text-red-500" @click.stop="removeItem(item)" />
                         </span>
-                        <span v-if="selectedItems.length > 5" class="text-xs text-gray-500">
+                        <span v-if="selectedItems.length > 5" class="text-sm text-gray-500">
                             +{{ selectedItems.length - 5 }} more
                         </span>
                     </template>
-                    <span v-else class="text-gray-400 italic text-sm">{{ placeholder }}</span>
-                </div>
-                <ChevronsUpDown class="w-4 h-4 opacity-50 shrink-0 ml-2" />
-            </template>
-        </button>
+                    <span v-else class="text-gray-400 italic text-base">{{ placeholder }}</span>
+                </div >
+    <ChevronsUpDown class="w-4 h-4 opacity-50 shrink-0 ml-2" />
+            </template >
+        </button >
 
-        <!-- Dropdown -->
-        <div
-            v-if="open && !readonly && !disabled"
-            class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg"
-        >
-            <!-- Search input -->
-            <div class="p-2 border-b border-gray-100">
-                <input
-                    ref="searchInput"
-                    v-model="searchValue"
-                    type="text"
-                    placeholder="Search..."
-                    class="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-blue-400"
+        < !--Dropdown -->
+    <div
+        v-if="open && !readonly && !disabled"
+        class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded shadow-lg"
+    >
+        <!-- Search input -->
+        <div class="p-2 border-b border-gray-100">
+            <input
+                ref="searchInput"
+                v-model="searchValue"
+                type="text"
+                placeholder="Search..."
+                class="w-full px-2 py-1.5 text-base border border-gray-200 rounded focus:outline-none focus:border-blue-400"
                     @keydown.escape="closeDropdown"
                 />
-            </div>
-
-            <!-- List -->
-            <ul class="max-h-60 overflow-y-auto">
-                <li v-if="!filteredItems.length" class="px-3 py-2 text-sm text-gray-400 italic">
-                    No results found.
-                </li>
-                <li
-                    v-for="item in filteredItems"
-                    :key="item.id"
-                    @mousedown.prevent="selectItem(item)"
-                    class="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-blue-50"
-                    :class="{ 'bg-blue-50 font-medium': multiple && selectedItems.some(s => s.id === item.id) }"
-                >
-                    <Check
-                        v-if="multiple && selectedItems.some(s => s.id === item.id)"
-                        class="w-4 h-4 text-blue-500 shrink-0"
-                    />
-                    <div class="flex flex-col">
-                        <span>{{ item[labelField] }}</span>
-                        <span v-if="nameDescriptionField && item[nameDescriptionField]" class="text-xs text-gray-400">
-                            {{ item[nameDescriptionField] }}
-                            <template v-if="descriptionField && item[descriptionField]">
-                                : {{ item[descriptionField] }}
-                            </template>
-                        </span>
-                    </div>
-                </li>
-            </ul>
         </div>
-    </div>
-</template>
+
+        <!-- List -->
+        <ul class="max-h-60 overflow-y-auto">
+            <li v-if="!filteredItems.length" class="px-3 py-2 text-base text-gray-400 italic">
+                No results found.
+            </li>
+            <li
+                v-for="item in filteredItems"
+                    :key="item.id"
+            @mousedown.prevent="selectItem(item)"
+            class="flex items-center gap-2 px-3 py-2 text-base cursor-pointer hover:bg-blue-50"
+            :class="{'bg-blue-50 font-medium': multiple && selectedItems.some(s => s.id === item.id) }"
+                >
+            <Check
+                v-if="multiple && selectedItems.some(s => s.id === item.id)"
+                class="w-4 h-4 text-blue-500 shrink-0"
+            />
+            <div class="flex flex-col">
+                <span>{{ item[labelField] }}</span>
+                <span v-if="nameDescriptionField && item[nameDescriptionField]" class="text-sm text-gray-400">
+                    {{ item[nameDescriptionField] }}
+                    <template v-if="descriptionField && item[descriptionField]">
+                        : {{ item[descriptionField] }}
+                    </template>
+                </span>
+            </div>
+        </li>
+    </ul>
+        </div >
+    </div >
+</template >

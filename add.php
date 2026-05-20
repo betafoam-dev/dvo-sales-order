@@ -217,7 +217,7 @@ if (empty($existingItems)) $existingItems = [[]];
         }
 
         .item-label {
-            font-size: 0.75rem;
+            font-size: 1.1rem;
             font-weight: 600;
             text-transform: uppercase;
             color: #6b7280;
@@ -229,7 +229,7 @@ if (empty($existingItems)) $existingItems = [[]];
             border: 1px solid #d1d5db;
             border-radius: 0.375rem;
             padding: 0.5rem 0.625rem;
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             background-color: #fff;
         }
 
@@ -245,7 +245,7 @@ if (empty($existingItems)) $existingItems = [[]];
             background-color: #fff;
             color: #ef4444;
             border-radius: 0.375rem;
-            font-size: 0.75rem;
+            font-size: 1.1rem;
             cursor: pointer;
         }
 
@@ -264,7 +264,7 @@ if (empty($existingItems)) $existingItems = [[]];
         }
 
         .items-total-label {
-            font-size: 0.875rem;
+            font-size: 1.2rem;
             font-weight: 700;
             color: #374151;
         }
@@ -272,18 +272,18 @@ if (empty($existingItems)) $existingItems = [[]];
         .items-total-amount {
             font-weight: 700;
             color: #2563eb;
-            font-size: 0.875rem;
+            font-size: 1.2rem;
         }
     </style>
 </head>
 <body class="bg-gray-100 min-h-screen">
 
-<nav class="bg-blue-600 shadow mb-2">
+<nav class="bg-teal-200 shadow mb-2">
     <div class="max-w-full px-4 py-3 flex items-center justify-between">
-        <a href="index.php" class="text-white font-bold text-xs xl:text-lg flex items-center gap-2 hover:text-blue-100">
+        <a href="index.php" class="text-white font-bold text-base xl:text-lg flex items-center gap-2 hover:text-blue-100">
             <i class="bi bi-arrow-left"></i> Back
         </a>
-        <span class="text-blue-200 text-sm flex items-center gap-1">
+        <span class="text-gray-600 text-base flex items-center gap-1">
             <i class="bi bi-person-circle"></i> <?= htmlspecialchars($_SESSION['user_name']) ?>
         </span>
     </div>
@@ -293,7 +293,7 @@ if (empty($existingItems)) $existingItems = [[]];
     <h4 class="text-xl font-bold text-gray-800 hidden xl:block mb-4">New Sales Order</h4>
 
     <?php if (!empty($errors)): ?>
-        <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded px-4 py-3 text-sm">
+        <div class="mb-4 bg-red-50 border border-red-300 text-red-700 rounded px-4 py-3 text-lg">
             <?php foreach ($errors as $e): ?><div><?= htmlspecialchars($e) ?></div><?php endforeach; ?>
         </div>
     <?php endif; ?>
@@ -306,12 +306,12 @@ if (empty($existingItems)) $existingItems = [[]];
                 <div class="grid grid-cols-1 xl:grid-cols-4 gap-2">
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
-                        <input type="date" name="order_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['order_date']) ?>" required>
+                        <label class="block text-lg font-semibold text-gray-700">Order Date <span class="text-red-500">*</span></label>
+                        <input type="date" name="order_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['order_date']) ?>" required>
                     </div>
 
                     <div class="xl:col-span-3">
-                        <label class="block text-sm font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
+                        <label class="block text-lg font-semibold text-gray-700">Customer Name <span class="text-red-500">*</span></label>
                         <div class="sd-wrapper" id="customer-wrapper">
                             <input type="hidden" name="customer_name" id="customer-name-value" value="<?= htmlspecialchars($data['customer_name']) ?>">
                             <input type="text" class="sd-input" id="customer-display" placeholder="-- Select Customer --" readonly
@@ -332,29 +332,29 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <div class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Is New Customer?</label>
+                        <label class="block text-lg font-semibold text-gray-700">Is New Customer?</label>
                         <label class="flex items-center gap-2 mt-2 cursor-pointer">
                             <input type="checkbox" name="is_new" value="1" <?= $data['is_new'] ? 'checked' : '' ?> class="w-4 h-4 text-blue-600 border-gray-300 rounded">
-                            <span class="text-sm text-gray-700">Yes</span>
+                            <span class="text-lg text-gray-700">Yes</span>
                         </label>
                     </div>
 
                     <div class="xl:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700">Billing Address</label>
+                        <label class="block text-lg font-semibold text-gray-700">Billing Address</label>
                         <input type="text" name="billing_address" id="billing-address-field"
-                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600"
+                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg bg-gray-50 text-gray-600"
                             value="<?= htmlspecialchars($data['billing_address'] ?? '') ?>" readonly>
                     </div>
 
                     <div class="xl:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700">TIN No.</label>
-                        <input type="text" name="tin_no" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['tin_no']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">TIN No.</label>
+                        <input type="text" name="tin_no" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['tin_no']) ?>">
                     </div>
 
                     <div class="xl:col-span-4">
-                        <label class="block text-sm font-semibold text-gray-700">
+                        <label class="block text-lg font-semibold text-gray-700">
                             Delivery Address
-                            <label class="inline-flex items-center gap-1 ml-3 font-normal text-xs text-gray-500 cursor-pointer">
+                            <label class="inline-flex items-center gap-1 ml-3 font-normal text-sm text-gray-500 cursor-pointer">
                                 <input type="checkbox" id="new-address-checkbox" class="w-3.5 h-3.5 text-blue-600 border-gray-300 rounded">
                                 New Delivery Address?
                             </label>
@@ -362,7 +362,7 @@ if (empty($existingItems)) $existingItems = [[]];
 
                         <!-- SELECT mode (existing addresses) -->
                         <div id="address-select-wrapper">
-                            <select id="address-select" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white text-gray-500">
+                            <select id="address-select" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white text-gray-500">
                                 <option value="">-- Select customer first --</option>
                             </select>
                             <!-- hidden input that actually submits the value -->
@@ -371,17 +371,17 @@ if (empty($existingItems)) $existingItems = [[]];
 
                         <!-- TEXT mode (new address, auto-filled) -->
                         <div id="address-text-wrapper" class="hidden">
-                            <input type="text" id="address-text-display" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm bg-gray-50 text-gray-600" readonly placeholder="Auto-filled from address fields below">
+                            <input type="text" id="address-text-display" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg bg-gray-50 text-gray-600" readonly placeholder="Auto-filled from address fields below">
                         </div>
                     </div>
 
                     <div id="field-lot-no" class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Address Line <span class="text-sm text-gray-500">(Lot, Blk, House #, Street)</span></label>
-                        <input type="text" name="lot_no" id="lot-no-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['lot_no']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Address Line <span class="text-lg text-gray-500">(Lot, Blk, House #, Street)</span></label>
+                        <input type="text" name="lot_no" id="lot-no-field" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['lot_no']) ?>">
                     </div>
 
                     <div class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Region</label>
+                        <label class="block text-lg font-semibold text-gray-700">Region</label>
                         <div class="sd-wrapper" id="region-wrapper">
                             <input type="text" class="sd-input" id="region-display" placeholder="-- Select Region --" readonly value="<?= htmlspecialchars($data['region']) ?>">
                             <input type="hidden" name="region" id="region-value" value="<?= htmlspecialchars($data['region']) ?>">
@@ -397,15 +397,15 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <div id="field-province" class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Province/City</label>
+                        <label class="block text-lg font-semibold text-gray-700">Province/City</label>
                         <div class="sd-wrapper" id="province-wrapper">
-                            <input type="text" class="sd-input text-sm" id="province-display" placeholder="-- Select Province --" readonly value="<?= htmlspecialchars($data['province']) ?>">
+                            <input type="text" class="sd-input text-lg" id="province-display" placeholder="-- Select Province --" readonly value="<?= htmlspecialchars($data['province']) ?>">
                             <input type="hidden" name="province" id="province-value" value="<?= htmlspecialchars($data['province']) ?>">
                             <div class="sd-dropdown" id="province-dropdown">
-                                <input type="text" class="sd-search text-sm" placeholder="Search province...">
+                                <input type="text" class="sd-search text-lg" placeholder="Search province...">
                                 <div class="sd-list">
                                     <?php foreach ($allProvinces as $p): ?>
-                                        <div class="sd-item text-sm" data-value="<?= htmlspecialchars($p['province_name']) ?>" data-id="<?= $p['province_id'] ?>" data-region-id="<?= $p['region_id'] ?>"><?= htmlspecialchars($p['province_name']) ?></div>
+                                        <div class="sd-item text-lg" data-value="<?= htmlspecialchars($p['province_name']) ?>" data-id="<?= $p['province_id'] ?>" data-region-id="<?= $p['region_id'] ?>"><?= htmlspecialchars($p['province_name']) ?></div>
                                     <?php endforeach; ?>
                                 </div>
                             </div>
@@ -413,15 +413,15 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <div id="field-municipality" class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Municipality</label>
-                        <div class="sd-wrapper text-sm" id="municipality-wrapper">
-                            <input type="text" class="sd-input text-sm" id="municipality-display" placeholder="-- Select Municipality --" readonly value="<?= htmlspecialchars($data['municipality']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Municipality</label>
+                        <div class="sd-wrapper text-lg" id="municipality-wrapper">
+                            <input type="text" class="sd-input text-lg" id="municipality-display" placeholder="-- Select Municipality --" readonly value="<?= htmlspecialchars($data['municipality']) ?>">
                             <input type="hidden" name="municipality" id="municipality-value" value="<?= htmlspecialchars($data['municipality']) ?>">
-                            <div class="sd-dropdown text-sm" id="municipality-dropdown">
-                                <input type="text" class="sd-search text-sm" placeholder="Search municipality...">
+                            <div class="sd-dropdown text-lg" id="municipality-dropdown">
+                                <input type="text" class="sd-search text-lg" placeholder="Search municipality...">
                                 <div class="sd-list">
                                     <?php foreach ($allMunicipalities as $m): ?>
-                                        <div class="sd-item text-sm"
+                                        <div class="sd-item text-lg"
                                              data-value="<?= htmlspecialchars($m['municipality_name']) ?>"
                                              data-id="<?= $m['municipality_id'] ?>"
                                              data-province="<?= htmlspecialchars($m['province_name']) ?>"
@@ -438,32 +438,32 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <div id="field-barangay" class="hidden">
-                        <label class="block text-sm font-semibold text-gray-700">Barangay</label>
-                        <div class="sd-wrapper text-sm" id="barangay-wrapper">
-                            <input type="text" class="sd-input text-sm" id="barangay-display" placeholder="Type to search barangay..." readonly value="<?= htmlspecialchars($data['barangay']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Barangay</label>
+                        <div class="sd-wrapper text-lg" id="barangay-wrapper">
+                            <input type="text" class="sd-input text-lg" id="barangay-display" placeholder="Type to search barangay..." readonly value="<?= htmlspecialchars($data['barangay']) ?>">
                             <input type="hidden" name="barangay" id="barangay-value" value="<?= htmlspecialchars($data['barangay']) ?>">
-                            <div class="sd-dropdown text-sm" id="barangay-dropdown">
-                                <input type="text" class="sd-search text-sm" placeholder="Search barangay...">
-                                <div class="sd-list text-sm" id="barangay-list">
-                                    <div class="sd-empty text-sm">Select a municipality first</div>
+                            <div class="sd-dropdown text-lg" id="barangay-dropdown">
+                                <input type="text" class="sd-search text-lg" placeholder="Search barangay...">
+                                <div class="sd-list text-lg" id="barangay-list">
+                                    <div class="sd-empty text-lg">Select a municipality first</div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Contact Person</label>
-                        <input type="text" name="contact_person" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['contact_person']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Contact Person</label>
+                        <input type="text" name="contact_person" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['contact_person']) ?>">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Contact Details</label>
-                        <input type="text" name="contact_details" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['contact_details']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Contact Details</label>
+                        <input type="text" name="contact_details" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['contact_details']) ?>">
                     </div>
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-1">Payment Terms</label>
-                        <select name="payment_terms" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                        <label class="block text-lg font-semibold text-gray-700 mb-1">Payment Terms</label>
+                        <select name="payment_terms" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
                             <option value="">-- Select --</option>
                             <?php foreach ($paymentTerms as $pt): ?>
                                 <option value="<?= htmlspecialchars($pt['description']) ?>" <?= $data['payment_terms'] === $pt['description'] ? 'selected' : '' ?>>
@@ -474,28 +474,28 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <!-- <div>
-                        <label class="block text-sm font-semibold text-gray-700">Deliver To</label>
-                        <input type="text" name="deliver_to" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['deliver_to']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Deliver To</label>
+                        <input type="text" name="deliver_to" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['deliver_to']) ?>">
                     </div> -->
 
                     <div>
-                        <label class="block text-sm font-semibold text-gray-700">Required Delivery Date</label>
-                        <input type="date" name="required_delivery_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['required_delivery_date']) ?>">
+                        <label class="block text-lg font-semibold text-gray-700">Required Delivery Date</label>
+                        <input type="date" name="required_delivery_date" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300" value="<?= htmlspecialchars($data['required_delivery_date']) ?>">
                     </div>
 
                     <div class="xl:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700">Remarks</label>
-                        <textarea name="remarks" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['remarks']) ?></textarea>
+                        <label class="block text-lg font-semibold text-gray-700">Remarks</label>
+                        <textarea name="remarks" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['remarks']) ?></textarea>
                     </div>
 
                     <div class="xl:col-span-2">
-                        <label class="block text-sm font-semibold text-gray-700">Special Instruction</label>
-                        <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
+                        <label class="block text-lg font-semibold text-gray-700">Special Instruction</label>
+                        <textarea name="special_instruction" rows="5" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300"><?= htmlspecialchars($data['special_instruction']) ?></textarea>
                     </div>
                     <div class="xl:col-span-4">
-                        <label class="block text-sm font-semibold text-gray-700">Attachment</label>
+                        <label class="block text-lg font-semibold text-gray-700">Attachment</label>
                         <input type="file" id="attachment-file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx"
-                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                            class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
                         <input type="hidden" name="attachment" id="attachment-b64" value="">
                         <div id="attachment-preview" class="mt-1 text-xs text-gray-500 hidden">
                             <span id="attachment-filename"></span>
@@ -504,8 +504,8 @@ if (empty($existingItems)) $existingItems = [[]];
                     </div>
 
                     <!-- <div>
-                        <label class="block text-sm font-semibold text-gray-700">Status</label>
-                        <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-sm focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
+                        <label class="block text-lg font-semibold text-gray-700">Status</label>
+                        <select name="status" class="w-full border border-gray-300 rounded px-3 py-1.5 text-lg focus:border-blue-400 focus:ring-1 focus:ring-blue-300 bg-white">
                             <?php foreach (['order draft','for approval','cancelled'] as $s): ?>
                                 <option value="<?= $s ?>" <?= $data['status'] === $s ? 'selected' : '' ?>><?= ucfirst($s) ?></option>
                             <?php endforeach; ?>
@@ -598,7 +598,7 @@ if (empty($existingItems)) $existingItems = [[]];
                 </div>
 
                 <div class="flex items-center justify-between my-2">
-                    <button type="button" id="add-row" class="bg-green-500 hover:bg-green-600 text-white text-sm font-medium px-3 py-1.5 rounded flex items-center gap-1">
+                    <button type="button" id="add-row" class="bg-green-500 hover:bg-green-600 text-white text-lg font-medium px-3 py-1.5 rounded flex items-center gap-1">
                         <i class="bi bi-plus-lg"></i> Add Item
                     </button>
                 </div>
@@ -613,13 +613,13 @@ if (empty($existingItems)) $existingItems = [[]];
         <div class="flex flex-row justify-between w-full items-center gap-2 my-4">
             <a href="index.php"
             id="btn-cancel"
-            class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-sm font-medium px-4 py-2 rounded">
+            class="border border-gray-300 text-gray-600 hover:bg-gray-50 text-lg font-medium px-4 py-2 rounded">
                 Cancel
             </a>
 
             <button type="submit"
                     id="btn-save"
-                    class="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium px-4 py-2 rounded flex items-center gap-1 transition-opacity">
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-lg font-medium px-4 py-2 rounded flex items-center gap-1 transition-opacity">
                 <span id="btn-save-idle" class="flex items-center gap-1">
                     <i class="bi bi-save"></i> Save Sales Order
                 </span>

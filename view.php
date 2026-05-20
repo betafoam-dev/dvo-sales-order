@@ -55,8 +55,8 @@ $statusBadge = match(strtolower($data['status'] ?? 'pending')) {
 <body>
 <nav class="navbar print:hidden navbar-dark bg-sky-400 mb-4 no-print">
     <div class="container-fluid">
-        <a class="text-sm text-white" href="index.php"><i class="bi bi-arrow-left me-2"></i>Back</a>
-        <span class="text-sm text-white"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
+        <a class="text-base text-white" href="index.php"><i class="bi bi-arrow-left me-2"></i>Back</a>
+        <span class="text-base text-white"><i class="bi bi-person-circle me-1"></i><?= htmlspecialchars($_SESSION['user_name']) ?></span>
     </div>
 </nav>
 
@@ -467,9 +467,6 @@ $totalPages = count($chunks);
                 </div>
             </div>
             <h1 class="text-center pt-1 font-bold text-lg">SALES ORDER FORM — ATTACHMENT</h1>
-            <p class="text-center text-xs text-gray-500 mb-2">
-                <?= htmlspecialchars($data['sales_order_code']) ?> &mdash; <?= htmlspecialchars($data['customer_name']) ?>
-            </p>
         </div>
 
         <!-- Attachment content -->
@@ -477,11 +474,11 @@ $totalPages = count($chunks);
             <?php if ($isImage): ?>
                 <img src="<?= htmlspecialchars($attachment) ?>"
                      alt="Attachment"
-                     style="max-width: 100%; max-height: 220mm; object-fit: contain; display: block; margin: 0 auto;">
+                     style="max-width: 80%; max-height: 180mm; object-fit: contain; display: block; margin: 0 auto;">
 
             <?php elseif ($isPdf): ?>
                 <!-- PDF: rendered via canvas so it prints properly -->
-                <canvas id="pdf-print-canvas" style="max-width:100%; display:block; margin:0 auto;"></canvas>
+                <canvas id="pdf-print-canvas" style="max-width:80%; display:block; margin:0 auto;"></canvas>
                 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
                 <script>
                 (function () {
