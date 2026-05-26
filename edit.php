@@ -44,7 +44,7 @@ $siStmt = $conn->prepare("SELECT * FROM sales_order_items WHERE sales_order_id =
 $siStmt->execute([$id]);
 $savedItems = $siStmt->fetchAll();
 
-$inventories       = $conn->query("SELECT i.id, i.stock_code, i.stock_name, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_name")->fetchAll();
+$inventories       = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
 $uoms              = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 $userName = $_SESSION['user_name'];
 
@@ -645,7 +645,7 @@ $currentStatus = $data['status'];
                                             <div class="sd-item"
                                                 data-value="<?= $inv['id'] ?>"
                                                 data-code="<?= htmlspecialchars($inv['stock_code']) ?>"
-                                                data-name="<?= htmlspecialchars($inv['stock_name']) ?>"
+                                                data-name="<?= htmlspecialchars($inv['stock_description']) ?>"
                                                 data-uom="<?= htmlspecialchars($inv['uom']) ?>"
                                                 data-label="<?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>">
                                                 <?= htmlspecialchars($inv['stock_code'] . ' - ' . $inv['stock_description']) ?>
