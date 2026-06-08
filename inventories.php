@@ -1,7 +1,6 @@
 <?php
 require_once 'auth.php';
 require_once 'config.php';
-
 $conn = getDBConnection();
 
 $search = trim($_GET['search'] ?? '');
@@ -11,6 +10,7 @@ $offset = ($page - 1) * $limit;
 
 $where = "WHERE i.deleted_at IS NULL";
 $params = [];
+
 if ($search !== '') {
     $where .= " AND (i.stock_code LIKE ? OR i.stock_description LIKE ?)";
     $s = "%$search%";
@@ -30,7 +30,8 @@ $sql = "SELECT i.id, i.stock_code, i.stock_description, i.uom,
         LEFT JOIN warehouse_inventories wi ON wi.inventory_id = i.id AND wi.deleted_at IS NULL
         $where
         ORDER BY i.stock_code
-        LIMIT $limit OFFSET $offset";
+        OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY";
+
 $stmt = $conn->prepare($sql);
 $stmt->execute($params);
 $inventories = $stmt->fetchAll();

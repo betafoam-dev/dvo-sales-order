@@ -44,18 +44,19 @@ $siStmt = $conn->prepare("SELECT * FROM sales_order_items WHERE sales_order_id =
 $siStmt->execute([$id]);
 $savedItems = $siStmt->fetchAll();
 
-$inventories       = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
-$uoms              = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
-$userName = $_SESSION['user_name'];
+$inventories  = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.uom FROM inventories i WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
+$uoms         = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
+$userName     = $_SESSION['user_name'];
 
 $customers = $conn->prepare("
-    SELECT id, full_name, address 
-    FROM customers 
+    SELECT id, full_name, address
+    FROM customers
     WHERE LOWER(sales_person) LIKE LOWER(?)
     ORDER BY full_name
 ");
 $customers->execute(['%' . $userName . '%']);
 $customers = $customers->fetchAll();
+
 $paymentTerms      = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
 $regions           = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 $allProvinces      = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name")->fetchAll(PDO::FETCH_ASSOC);
@@ -78,7 +79,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $fields = ['customer_name','tin_no','order_date','address','billing_address',
                'contact_details','payment_terms','contact_person','required_delivery_date',
                'deliver_to','remarks','special_instruction','status',
-               'lot_no','barangay','municipality','province','region', 'attachment'];
+               'lot_no','barangay','municipality','province','region','attachment'];
     foreach ($fields as $f) $data[$f] = $_POST[$f] ?? $data[$f];
     $data['is_new'] = isset($_POST['is_new']) ? 1 : 0;
 
@@ -96,12 +97,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $total = array_sum(array_map(fn($i) => (float)$i['unit_price'] * (float)$i['quantity'], $items));
         $conn->beginTransaction();
         try {
+            // NOW() → GETDATE()
             $conn->prepare("UPDATE sales_order_forms SET
                 customer_name=?, tin_no=?, order_date=?, address=?, billing_address=?,
                 lot_no=?, barangay=?, municipality=?, province=?, region=?,
                 contact_details=?, payment_terms=?, contact_person=?, required_delivery_date=?,
                 deliver_to=?, is_new=?, remarks=?, special_instruction=?, status=?,
-                attachment=?, total_amount=?, updated_by=?, updated_at=NOW() WHERE id=?")
+                attachment=?, total_amount=?, updated_by=?, updated_at=GETDATE() WHERE id=?")
             ->execute([
                 $data['customer_name'], $data['tin_no'], $data['order_date'],
                 $data['address'], $data['billing_address'],
@@ -116,20 +118,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $submittedIds = array_filter(array_column(array_values($items), 'item_id'));
             if (!empty($submittedIds)) {
                 $ph = implode(',', array_fill(0, count($submittedIds), '?'));
-                $conn->prepare("UPDATE sales_order_items SET deleted_at=NOW(), updated_by=?
+                // NOW() → GETDATE()
+                $conn->prepare("UPDATE sales_order_items SET deleted_at=GETDATE(), updated_by=?
                     WHERE sales_order_id=? AND deleted_at IS NULL AND id NOT IN ($ph)")
                     ->execute(array_merge([$_SESSION['user_id'], $id], array_values($submittedIds)));
             } else {
-                $conn->prepare("UPDATE sales_order_items SET deleted_at=NOW(), updated_by=?
+                // NOW() → GETDATE()
+                $conn->prepare("UPDATE sales_order_items SET deleted_at=GETDATE(), updated_by=?
                     WHERE sales_order_id=? AND deleted_at IS NULL")
                     ->execute([$_SESSION['user_id'], $id]);
             }
 
+            // NOW() → GETDATE()
             $ins = $conn->prepare("INSERT INTO sales_order_items
                 (uuid, sales_order_uuid, sales_order_id, inventory_id, item_code, item_description, uom, quantity, unit_price, amount, created_by, updated_by, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())");
+
+            // NOW() → GETDATE()
             $upd = $conn->prepare("UPDATE sales_order_items SET
-                inventory_id=?, item_code=?, item_description=?, uom=?, quantity=?, unit_price=?, amount=?, updated_by=?, updated_at=NOW()
+                inventory_id=?, item_code=?, item_description=?, uom=?, quantity=?, unit_price=?, amount=?, updated_by=?, updated_at=GETDATE()
                 WHERE id=? AND sales_order_id=?");
 
             foreach ($items as $item) {
@@ -155,7 +162,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $savedItems = array_values($items);
 }
 
-// Current status for button state logic
 $currentStatus = $data['status'];
 ?>
 <!DOCTYPE html>

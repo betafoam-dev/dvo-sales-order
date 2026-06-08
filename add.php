@@ -4,7 +4,7 @@ require_once 'config.php';
 
 $conn = getDBConnection();
 
-if (isset($_GET['ajax'])) { 
+if (isset($_GET['ajax'])) {
     header('Content-Type: application/json');
     $ajax = $_GET['ajax'];
 
@@ -34,20 +34,21 @@ if (isset($_GET['ajax'])) {
         echo json_encode($s->fetchAll(PDO::FETCH_ASSOC)); exit;
     }
 
-if ($ajax === 'customer_addresses') {
-    $name = trim($_GET['customer_name'] ?? '');
-    if (!$name) { echo json_encode([]); exit; }
-    $s = $conn->prepare("
-        SELECT address, lot_no, barangay, municipality, province, region
-        FROM sales_order_forms
-        WHERE customer_name = ? AND address IS NOT NULL AND address != ''
-        GROUP BY address, lot_no, barangay, municipality, province, region
-        ORDER BY address
-    ");
-    $s->execute([$name]);
-    echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
-    exit;
-}
+    if ($ajax === 'customer_addresses') {
+        $name = trim($_GET['customer_name'] ?? '');
+        if (!$name) { echo json_encode([]); exit; }
+        // SQL Server: GROUP BY requires all non-aggregated columns
+        $s = $conn->prepare("
+            SELECT address, lot_no, barangay, municipality, province, region
+            FROM sales_order_forms
+            WHERE customer_name = ? AND address IS NOT NULL AND address != ''
+            GROUP BY address, lot_no, barangay, municipality, province, region
+            ORDER BY address
+        ");
+        $s->execute([$name]);
+        echo json_encode($s->fetchAll(PDO::FETCH_ASSOC));
+        exit;
+    }
 
     echo json_encode(['error' => 'Invalid ajax action']); exit;
 }
@@ -55,7 +56,7 @@ if ($ajax === 'customer_addresses') {
 $errors = [];
 $data = [
     'customer_name' => '', 'tin_no' => '', 'so_no' => '',
-    'order_date' => date('Y-m-d') , 'address' => '', 'billing_address' => '', 'contact_details' => '',
+    'order_date' => date('Y-m-d'), 'address' => '', 'billing_address' => '', 'contact_details' => '',
     'payment_terms' => '', 'contact_person' => '', 'required_delivery_date' => '',
     'deliver_to' => '', 'is_new' => 0,
     'remarks' => '', 'special_instruction' => '', 'status' => 'order draft', 'total_amount' => 0,
@@ -73,19 +74,20 @@ $inventories = $conn->query("SELECT i.id, i.stock_code, i.stock_description, i.u
     FROM inventories i LEFT JOIN warehouse_inventories wi ON wi.inventory_id = i.id AND wi.deleted_at IS NULL
     WHERE i.deleted_at IS NULL ORDER BY i.stock_description")->fetchAll();
 
-$uoms      = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
+$uoms     = $conn->query("SELECT id, uom_name, uom_code FROM uoms ORDER BY uom_name")->fetchAll();
 
-$userName = $_SESSION['user_name'];
+$userName = $_SESSION['full_name'];
 
 $customers = $conn->prepare("
-    SELECT id, full_name, address 
-    FROM customers 
+    SELECT id, full_name, address
+    FROM customers
     WHERE LOWER(sales_person) LIKE LOWER(?)
     ORDER BY full_name
 ");
 $customers->execute(['%' . $userName . '%']);
 $customers = $customers->fetchAll();
-$regions   = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
+
+$regions      = $conn->query("SELECT region_id, region_description FROM table_region ORDER BY region_description")->fetchAll(PDO::FETCH_ASSOC);
 $paymentTerms = $conn->query("SELECT id, description FROM payment_terms ORDER BY description")->fetchAll(PDO::FETCH_ASSOC);
 
 $allProvinces = $conn->query("SELECT province_id, province_name, region_id FROM table_province ORDER BY province_name")->fetchAll(PDO::FETCH_ASSOC);
@@ -114,13 +116,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $conn->beginTransaction();
         try {
             $soUuid = generateUuid();
+            // SQL Server: NOW() → GETDATE()
             $stmt = $conn->prepare("INSERT INTO sales_order_forms
                 (sales_order_code, uuid, customer_name, tin_no, so_no, order_date, address, billing_address,
                  lot_no, barangay, municipality, province, region,
                  contact_details, payment_terms, contact_person, required_delivery_date,
                  deliver_to, is_new, remarks, special_instruction, status, total_amount, attachment,
                  created_by, updated_by, created_at, updated_at)
-                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
+                VALUES ('',?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())");
             $stmt->execute([
                 $soUuid,
                 $data['customer_name'], $data['tin_no'], $data['so_no'],
@@ -133,11 +136,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $data['attachment'],
                 $_SESSION['user_id'], $_SESSION['user_id']
             ]);
-            $soId = $conn->lastInsertId();
+            // SQL Server: lastInsertId() requires sequence name or use SCOPE_IDENTITY()
+            $soId = (int)$conn->query("SELECT SCOPE_IDENTITY()")->fetchColumn();
 
+            // SQL Server: NOW() → GETDATE()
             $istmt = $conn->prepare("INSERT INTO sales_order_items
                 (uuid, sales_order_uuid, sales_order_id, inventory_id, item_code, item_description, uom, quantity, unit_price, amount, created_by, updated_by, created_at, updated_at)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,NOW(),NOW())");
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,GETDATE(),GETDATE())");
             foreach ($items as $item) {
                 $istmt->execute([
                     generateUuid(), $soUuid, $soId,

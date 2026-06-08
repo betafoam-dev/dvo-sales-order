@@ -1,12 +1,11 @@
 <?php
 require_once 'auth.php';
 require_once 'config.php';
-
 $conn = getDBConnection();
 
 // Handle soft delete
 if (isset($_GET['delete']) && is_numeric($_GET['delete'])) {
-    $stmt = $conn->prepare("UPDATE sales_order_forms SET deleted_at = NOW(), updated_by = ? WHERE id = ? AND deleted_at IS NULL");
+    $stmt = $conn->prepare("UPDATE sales_order_forms SET deleted_at = GETDATE(), updated_by = ? WHERE id = ? AND deleted_at IS NULL");
     $stmt->execute([$_SESSION['user_id'], $_GET['delete']]);
     header('Location: index.php?msg=deleted');
     exit;
@@ -43,14 +42,20 @@ if ($search !== '') {
     $params = array_merge($params, [$s, $s, $s]);
 }
 
+// COUNT query
 $total = $conn->prepare("SELECT COUNT(*) FROM sales_order_forms sof $where");
 $total->execute($params);
 $totalRows = (int)$total->fetchColumn();
 $totalPages = max(1, ceil($totalRows / $limit));
 
-$sql = "SELECT sof.*, u.name AS created_by_name FROM sales_order_forms sof
+$sql = "SELECT sof.*, u.name AS created_by_name
+        FROM sales_order_forms sof
         LEFT JOIN users u ON u.id = sof.created_by
-        $where ORDER BY sof.id DESC LIMIT $limit OFFSET $offset";
+        $where
+        ORDER BY sof.id DESC
+        OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY";
+
+// Do NOT append offset/limit to params
 $stmt = $conn->prepare($sql);
 $stmt->execute($params);
 $orders = $stmt->fetchAll();

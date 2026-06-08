@@ -1,7 +1,6 @@
 <?php
 require_once 'auth.php';
 require_once 'config.php';
-
 $conn = getDBConnection();
 
 $search = trim($_GET['search'] ?? '');
@@ -11,12 +10,13 @@ $offset = ($page - 1) * $limit;
 
 $where = "WHERE c.deleted_at IS NULL";
 $params = [];
+
 if ($search !== '') {
     $where .= " AND (c.full_name LIKE ?)";
-    $s = "%$search%";
-    $params = [$s];
+    $params[] = "%$search%";
 }
 
+// COUNT query
 $total = $conn->prepare("SELECT COUNT(*) FROM customers c $where");
 $total->execute($params);
 $totalRows = (int)$total->fetchColumn();
@@ -29,7 +29,8 @@ $sql = "SELECT c.id, c.full_name, c.address, c.lot_no, c.barangay,
         FROM customers c
         $where
         ORDER BY c.full_name
-        LIMIT $limit OFFSET $offset";
+        OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY";
+
 $stmt = $conn->prepare($sql);
 $stmt->execute($params);
 $customers = $stmt->fetchAll();

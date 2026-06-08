@@ -10,12 +10,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($username && $password) {
         $conn = getDBConnection();
+
+        // SQL Server: no LIMIT, use TOP 1 instead
         $stmt = $conn->prepare("
-            SELECT u.id, u.name, u.username, u.password, r.name AS role_name
+            SELECT TOP 1 u.id, u.name, u.username, u.password, r.name AS role_name
             FROM users u
             LEFT JOIN roles r ON r.id = u.role_id
             WHERE u.username = ?
-            LIMIT 1
         ");
         $stmt->execute([$username]);
         $user = $stmt->fetch();
@@ -23,7 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($user && password_verify($password, $user['password'])) {
             $_SESSION['user_id']   = $user['id'];
             $_SESSION['user_name'] = $user['name'];
-            $_SESSION['user_role'] = $user['role_name']; // ← added
+            $_SESSION['user_role'] = $user['role_name'];
             header('Location: index.php');
             exit;
         } else {
