@@ -4,36 +4,48 @@ require_once 'config.php';
 $conn = getDBConnection();
 
 $search = trim($_GET['search'] ?? '');
-$page = max(1, (int)($_GET['page'] ?? 1));
-$limit = 20;
+$page   = max(1, (int)($_GET['page'] ?? 1));
+$limit  = 20;
 $offset = ($page - 1) * $limit;
 
-$where = "WHERE i.deleted_at IS NULL";
+$where  = "WHERE i.deleted_at IS NULL";
 $params = [];
 
 if ($search !== '') {
-    $where .= " AND (i.stock_code LIKE ? OR i.stock_description LIKE ?)";
-    $s = "%$search%";
-    $params = [$s, $s];
+    $tokens = array_filter(explode(' ', preg_replace('/\s+/', ' ', $search)));
+    foreach ($tokens as $token) {
+        $where .= " AND (i.stock_code LIKE ? OR i.stock_description LIKE ?)";
+        $t = "%$token%";
+        $params[] = $t;
+        $params[] = $t;
+    }
 }
 
-$total = $conn->prepare("SELECT COUNT(*) FROM inventories i $where");
-$total->execute($params);
-$totalRows = (int)$total->fetchColumn();
+$countStmt = $conn->prepare("SELECT COUNT(*) FROM inventories i $where");
+$countStmt->execute($params);
+$totalRows  = (int)$countStmt->fetchColumn();
 $totalPages = max(1, ceil($totalRows / $limit));
 
 $sql = "SELECT i.id, i.stock_code, i.stock_description, i.uom,
-            c.category_name AS category_name,
+            c.category_name,
             wi.item_qty, wi.min_qty, wi.max_qty, wi.is_stocking, wi.is_active
         FROM inventories i
-        LEFT JOIN categories c ON c.id = i.category_id AND c.deleted_at IS NULL
+        LEFT JOIN categories c  ON c.id  = i.category_id  AND c.deleted_at  IS NULL
         LEFT JOIN warehouse_inventories wi ON wi.inventory_id = i.id AND wi.deleted_at IS NULL
         $where
         ORDER BY i.stock_code
         OFFSET $offset ROWS FETCH NEXT $limit ROWS ONLY";
 
 $stmt = $conn->prepare($sql);
-$stmt->execute($params);
+
+$paramIndex = 1;
+foreach ($params as $value) {
+    $stmt->bindValue($paramIndex++, $value, PDO::PARAM_STR);
+}
+$stmt->bindValue($paramIndex++, $offset, PDO::PARAM_INT);
+$stmt->bindValue($paramIndex,   $limit,  PDO::PARAM_INT);
+
+$stmt->execute();
 $inventories = $stmt->fetchAll();
 ?>
 <!DOCTYPE html>
