@@ -1,6 +1,32 @@
 <?php
 require_once 'auth.php';
 require_once 'config.php';
+
+$sso_error = null;
+if (isset($_POST['goto_laravel'])) {
+    $context = stream_context_create([
+        'http' => [
+            'method'  => 'POST',
+            'header'  => implode("\r\n", [
+                'Content-Type: application/json',
+                'X-SSO-Secret: ' . SSO_SECRET,
+            ]),
+            'content' => json_encode(['user_id' => $_SESSION['user_id']]),
+            'timeout' => 5,
+        ],
+    ]);
+
+    $response = @file_get_contents(LARAVEL_URL . '/api/sso/generate-token', false, $context);
+    $data = $response ? json_decode($response, true) : null;
+
+    if (!empty($data['token'])) {
+        header('Location: ' . LARAVEL_URL . '/sso/login?token=' . $data['token']);
+        exit;
+    } else {
+        $sso_error = 'Failed to connect to the main system.';
+    }
+}
+
 $conn = getDBConnection();
 
 $search = trim($_GET['search'] ?? '');
@@ -60,6 +86,12 @@ $customers = $stmt->fetchAll();
             <a href="customers.php" class="bg-white text-teal-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
                 <i class="bi bi-person-badge"></i> Customer
             </a>
+            <form method="POST">
+                <button type="submit" name="goto_laravel"
+                    class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
+                    <i class="bi bi-box-arrow-up-right"></i> Customer Addresses
+                </button>
+            </form>
         </div>
         <div class="flex w-full xl:w-auto justify-between xl:justify-end items-center gap-3">
             <span class="text-gray-800 text-sm flex items-center gap-1">
@@ -72,6 +104,13 @@ $customers = $stmt->fetchAll();
         </div>
     </div>
 </nav>
+<?php if ($sso_error): ?>
+    <div class="max-w-full px-4 mt-2">
+        <div class="bg-red-100 text-red-700 text-sm px-4 py-2 rounded">
+            <?= htmlspecialchars($sso_error) ?>
+        </div>
+    </div>
+<?php endif; ?>
 
 <div class="max-w-full px-2 xl:px-4">
 
