@@ -137,7 +137,7 @@ $customers = $stmt->fetchAll();
             <form method="POST">
                 <button type="submit" name="goto_laravel"
                     class="bg-white text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
-                    <i class="bi bi-box-arrow-up-right"></i> Customer Addresses
+                    <i class="bi bi-box-arrow-up-right"></i> Edit Customer
                 </button>
             </form>
         </div>
@@ -174,6 +174,12 @@ $customers = $stmt->fetchAll();
         </div>
 
         <div class="p-2 xl:p-5">
+            <form method="POST">
+                <button type="submit" name="goto_laravel"
+                    class="bg-white block xl:hidden text-blue-600 text-sm font-medium px-3 py-1.5 rounded hover:bg-gray-100 hidden xl:flex items-center gap-1">
+                    <i class="bi bi-box-arrow-up-right"></i> Edit Customer
+                </button>
+            </form>
             <!-- Search Form -->
             <form method="GET" class="flex items-center gap-2 mb-4">
                 <div class="flex items-center border border-gray-300 rounded overflow-hidden w-full max-w-md">
