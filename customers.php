@@ -2,28 +2,76 @@
 require_once 'auth.php';
 require_once 'config.php';
 
+function getAvailableLaravelUrl() {
+    $cacheFile = __DIR__ . '/laravel_url_cache.json';
+    $cacheTtl = 120; // seconds
+
+    // Use cache if still fresh
+    if (file_exists($cacheFile)) {
+        $cached = json_decode(file_get_contents($cacheFile), true);
+        if ($cached && (time() - $cached['time']) < $cacheTtl) {
+            return $cached['url'];
+        }
+    }
+
+    $host = $_SERVER['HTTP_HOST'] ?? '';
+
+    // Internal access — always fixed
+    if (strpos($host, 'system.betafoam.ph') === false
+        && strpos($host, 'system2.betafoam.ph') === false
+        && strpos($host, 'system3.betafoam.ph') === false) {
+        return 'http://172.16.0.21';
+    }
+
+    // External access — check which domain is online
+    $logins = ["http://system.betafoam.ph", "http://system2.betafoam.ph", "http://system3.betafoam.ph"];
+    $availableLogin = null;
+
+    foreach ($logins as $login) {
+        $context = stream_context_create(['http' => ['timeout' => 2]]);
+        $headers = @get_headers($login, 1, $context);
+        if ($headers && preg_match('/(200|301|302)/', $headers[0])) {
+            $availableLogin = $login;
+            break;
+        }
+    }
+
+    $url = $availableLogin ? $availableLogin . ':1214' : null;
+
+    // Save to cache
+    file_put_contents($cacheFile, json_encode(['url' => $url, 'time' => time()]));
+
+    return $url;
+}
+
 $sso_error = null;
 if (isset($_POST['goto_laravel'])) {
-    $context = stream_context_create([
-        'http' => [
-            'method'  => 'POST',
-            'header'  => implode("\r\n", [
-                'Content-Type: application/json',
-                'X-SSO-Secret: ' . SSO_SECRET,
-            ]),
-            'content' => json_encode(['user_id' => $_SESSION['user_id']]),
-            'timeout' => 5,
-        ],
-    ]);
+    $laravelUrl = getAvailableLaravelUrl();
 
-    $response = @file_get_contents(LARAVEL_URL . '/api/sso/generate-token', false, $context);
-    $data = $response ? json_decode($response, true) : null;
-
-    if (!empty($data['token'])) {
-        header('Location: ' . LARAVEL_URL . '/sso/login?token=' . $data['token']);
-        exit;
+    if (!$laravelUrl) {
+        $sso_error = 'Unable to connect to the main system. Please try again later.';
     } else {
-        $sso_error = 'Failed to connect to the main system.';
+        $context = stream_context_create([
+            'http' => [
+                'method'  => 'POST',
+                'header'  => implode("\r\n", [
+                    'Content-Type: application/json',
+                    'X-SSO-Secret: ' . SSO_SECRET,
+                ]),
+                'content' => json_encode(['user_id' => $_SESSION['user_id']]),
+                'timeout' => 5,
+            ],
+        ]);
+
+        $response = @file_get_contents($laravelUrl . '/api/sso/generate-token', false, $context);
+        $data = $response ? json_decode($response, true) : null;
+
+        if (!empty($data['token'])) {
+            header('Location: ' . $laravelUrl . '/sso/login?token=' . $data['token']);
+            exit;
+        } else {
+            $sso_error = 'Failed to connect to the main system.';
+        }
     }
 }
 
